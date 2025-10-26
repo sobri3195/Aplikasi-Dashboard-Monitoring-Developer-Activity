@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      UserRole @default(DEVELOPER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  devices    Device[]
+  activities Activity[]
+
+  @@map("users")
+}
+
+model Device {
+  id            String       @id @default(uuid())
+  userId        String
+  deviceName    String
+  fingerprint   String       @unique
+  hostname      String?
+  macAddress    String?
+  cpuInfo       String?
+  osInfo        String?
+  ipAddress     String?
+  status        DeviceStatus @default(PENDING)
+  lastSeen      DateTime?
+  isAuthorized  Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activities Activity[]
+
+  @@map("devices")
+}
+
+model Activity {
+  id          String         @id @default(uuid())
+  userId      String
+  deviceId    String
+  activityType ActivityType
+  repository  String?
+  branch      String?
+  commitHash  String?
+  details     Json?
+  ipAddress   String?
+  location    String?
+  isSuspicious Boolean       @default(false)
+  riskLevel   RiskLevel     @default(LOW)
+  timestamp   DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  alerts Alert[]
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([isSuspicious])
+  @@index([timestamp])
+  @@map("activities")
+}
+
+model Alert {
+  id          String      @id @default(uuid())
+  activityId  String
+  alertType   AlertType
+  severity    Severity
+  message     String
+  isResolved  Boolean     @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  notified    Boolean     @default(false)
+  notifiedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([isResolved])
+  @@index([severity])
+  @@index([createdAt])
+  @@map("alerts")
+}
+
+model Repository {
+  id              String           @id @default(uuid())
+  name            String
+  gitlabUrl       String?
+  gitlabProjectId Int?
+  isEncrypted     Boolean          @default(false)
+  encryptedAt     DateTime?
+  securityStatus  SecurityStatus   @default(SECURE)
+  lastActivity    DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([gitlabProjectId])
+  @@map("repositories")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String?
+  entityId  String?
+  changes   Json?
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@index([userId])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+
+enum UserRole {
+  ADMIN
+  DEVELOPER
+  VIEWER
+}
+
+enum DeviceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ActivityType {
+  GIT_CLONE
+  GIT_PULL
+  GIT_PUSH
+  GIT_COMMIT
+  GIT_CHECKOUT
+  REPO_ACCESS
+  REPO_COPY
+  UNAUTHORIZED_ACCESS
+  LOGIN
+  LOGOUT
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertType {
+  UNAUTHORIZED_DEVICE
+  SUSPICIOUS_ACTIVITY
+  REPO_COPY_DETECTED
+  UNUSUAL_LOCATION
+  MULTIPLE_FAILED_AUTH
+  REPO_ENCRYPTED
+  DEVICE_CHANGE
+}
+
+enum Severity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum SecurityStatus {
+  SECURE
+  WARNING
+  COMPROMISED
+  ENCRYPTED
+}

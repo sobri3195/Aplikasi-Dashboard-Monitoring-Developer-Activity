@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: devmonitor-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-devmonitor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devmonitor123}
+      POSTGRES_DB: ${POSTGRES_DB:-devmonitor}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - devmonitor-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-devmonitor}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: devmonitor-backend
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - PORT=${PORT:-5000}
+      - NODE_ENV=${NODE_ENV:-development}
+      - JWT_SECRET=${JWT_SECRET}
+      - GITLAB_WEBHOOK_SECRET=${GITLAB_WEBHOOK_SECRET}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - devmonitor-network
+    command: npm run dev
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: devmonitor-dashboard
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:5000}
+      - REACT_APP_SOCKET_URL=${REACT_APP_SOCKET_URL:-http://localhost:5000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./dashboard:/app
+      - /app/node_modules
+    networks:
+      - devmonitor-network
+    command: npm start
+
+networks:
+  devmonitor-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
