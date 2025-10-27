@@ -7,12 +7,20 @@ const activityRoutes = require('./activityRoutes');
 const alertRoutes = require('./alertRoutes');
 const webhookRoutes = require('./webhookRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
+const repositoryRoutes = require('./repositoryRoutes');
+const userRoutes = require('./userRoutes');
+const auditLogRoutes = require('./auditLogRoutes');
+const healthRoutes = require('./healthRoutes');
 
+router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/devices', deviceRoutes);
 router.use('/activities', activityRoutes);
 router.use('/alerts', alertRoutes);
 router.use('/webhooks', webhookRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/repositories', repositoryRoutes);
+router.use('/users', userRoutes);
+router.use('/audit-logs', auditLogRoutes);
 
 module.exports = router;

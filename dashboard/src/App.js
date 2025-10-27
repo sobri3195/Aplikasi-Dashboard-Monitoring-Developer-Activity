@@ -12,6 +12,8 @@ import Devices from './pages/Devices';
 import Activities from './pages/Activities';
 import Alerts from './pages/Alerts';
 import Security from './pages/Security';
+import Repositories from './pages/Repositories';
+import Users from './pages/Users';
 
 function App() {
   return (
@@ -47,6 +49,8 @@ function App() {
               <Route path="activities" element={<Activities />} />
               <Route path="alerts" element={<Alerts />} />
               <Route path="security" element={<Security />} />
+              <Route path="repositories" element={<Repositories />} />
+              <Route path="users" element={<Users />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

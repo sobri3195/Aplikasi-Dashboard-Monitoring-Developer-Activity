@@ -11,6 +11,7 @@ const logger = require('./utils/logger');
 const { errorHandler } = require('./middleware/errorHandler');
 const routes = require('./routes');
 const { initSocketIO } = require('./services/socketService');
+const cronService = require('./services/cronService');
 
 const app = express();
 const server = http.createServer(app);
@@ -58,6 +59,10 @@ server.listen(PORT, () => {
   logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📊 Dashboard Monitoring Developer Activity API`);
   logger.info(`🌍 Environment: ${process.env.NODE_ENV}`);
+  
+  if (process.env.ENABLE_CRON_JOBS !== 'false') {
+    cronService.init();
+  }
 });
 
 process.on('unhandledRejection', (error) => {

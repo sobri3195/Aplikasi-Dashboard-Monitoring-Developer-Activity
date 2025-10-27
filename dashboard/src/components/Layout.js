@@ -8,6 +8,8 @@ import {
   ClockIcon,
   BellAlertIcon,
   ShieldCheckIcon,
+  FolderIcon,
+  UserGroupIcon,
   Bars3Icon,
   XMarkIcon,
   ArrowRightOnRectangleIcon,
@@ -26,6 +28,8 @@ const Layout = () => {
     { name: 'Activities', href: '/activities', icon: ClockIcon },
     { name: 'Alerts', href: '/alerts', icon: BellAlertIcon },
     { name: 'Security', href: '/security', icon: ShieldCheckIcon },
+    { name: 'Repositories', href: '/repositories', icon: FolderIcon },
+    { name: 'Users', href: '/users', icon: UserGroupIcon, adminOnly: true },
   ];
 
   const handleLogout = () => {
@@ -63,6 +67,9 @@ const Layout = () => {
 
             <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
               {navigation.map((item) => {
+                if (item.adminOnly && user?.role !== 'ADMIN') {
+                  return null;
+                }
                 const isActive = location.pathname === item.href;
                 return (
                   <Link

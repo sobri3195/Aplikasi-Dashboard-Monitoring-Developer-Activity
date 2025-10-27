@@ -1,8 +1,87 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
 const { emitToDashboard } = require('./socketService');
+const nodemailer = require('nodemailer');
 
 class NotificationService {
+  constructor() {
+    this.emailTransporter = null;
+    if (process.env.EMAIL_ENABLED === 'true') {
+      this.emailTransporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: parseInt(process.env.EMAIL_PORT) || 587,
+        secure: process.env.EMAIL_SECURE === 'true',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      });
+    }
+  }
+
+  async sendEmailNotification(to, subject, message, severity = 'info') {
+    if (!this.emailTransporter) {
+      logger.warn('Email notification skipped: not configured');
+      return;
+    }
+
+    try {
+      const htmlContent = this.formatEmailContent(subject, message, severity);
+      
+      await this.emailTransporter.sendMail({
+        from: process.env.EMAIL_FROM || 'noreply@devmonitor.com',
+        to: to,
+        subject: `[DevMonitor] ${subject}`,
+        html: htmlContent,
+      });
+
+      logger.info(`Email notification sent to ${to}`);
+    } catch (error) {
+      logger.error('Failed to send email notification:', error.message);
+    }
+  }
+
+  formatEmailContent(subject, message, severity) {
+    const severityColors = {
+      INFO: '#36a64f',
+      WARNING: '#ff9800',
+      CRITICAL: '#ff0000',
+    };
+    const color = severityColors[severity] || severityColors.INFO;
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: ${color}; color: white; padding: 20px; text-align: center; }
+          .content { background-color: #f4f4f4; padding: 20px; margin-top: 20px; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h2>🔔 Developer Activity Alert</h2>
+          </div>
+          <div class="content">
+            <h3>${subject}</h3>
+            <p>${message}</p>
+            <p><strong>Severity:</strong> ${severity}</p>
+            <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+          </div>
+          <div class="footer">
+            <p>This is an automated message from DevMonitor</p>
+            <p>Please do not reply to this email</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
   async sendSlackNotification(message, severity = 'info') {
     if (!process.env.SLACK_WEBHOOK_URL || process.env.SLACK_ENABLED !== 'true') {
       logger.warn('Slack notification skipped: not configured');
