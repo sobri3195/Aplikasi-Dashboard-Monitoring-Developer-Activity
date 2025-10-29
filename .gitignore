@@ -45,6 +45,11 @@ dist/
 # Uploads
 uploads/
 
+# Backups
+backups/
+*.sql
+*.dump
+
 # Temporary files
 tmp/
 temp/

@@ -205,6 +205,68 @@
 - ✅ API endpoint documentation
 - ✅ Environment variable documentation
 
+### New System Features (5 System-Related Features)
+
+#### 1. System Performance Monitoring
+- ✅ Real-time CPU usage tracking
+- ✅ Memory usage monitoring (total, free, used)
+- ✅ Disk usage tracking
+- ✅ Active connections monitoring
+- ✅ Requests per minute tracking
+- ✅ Performance history with time-based filtering
+- ✅ Performance statistics and analytics
+- ✅ Automated performance recording every 5 minutes
+- ✅ Automatic cleanup of old performance records (7 days retention)
+- ✅ Performance charts and graphs
+
+#### 2. Backup Management System
+- ✅ Manual database backup creation
+- ✅ Automated daily backup scheduling
+- ✅ Full and incremental backup support
+- ✅ Backup status tracking (IN_PROGRESS, COMPLETED, FAILED)
+- ✅ Backup file size tracking
+- ✅ Backup download functionality
+- ✅ Backup deletion and cleanup
+- ✅ Backup statistics and history
+- ✅ Backup scheduling configuration
+- ✅ PostgreSQL database backup support
+
+#### 3. API Usage Analytics
+- ✅ Comprehensive API usage tracking
+- ✅ Request/response time monitoring
+- ✅ Endpoint usage statistics
+- ✅ Status code distribution
+- ✅ Error rate calculation
+- ✅ Rate limit violation tracking
+- ✅ User-specific API usage analytics
+- ✅ Top endpoints by request count
+- ✅ Usage trends and patterns
+- ✅ Automated cleanup of old logs (30 days retention)
+
+#### 4. System Logs Viewer
+- ✅ Centralized system log management
+- ✅ Multiple log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+- ✅ Log filtering by level, source, and time
+- ✅ Full-text search in log messages
+- ✅ Log statistics and aggregation
+- ✅ Recent errors tracking
+- ✅ Log export functionality (JSON format)
+- ✅ Source-based log grouping
+- ✅ Automated log cleanup
+- ✅ Real-time log viewing
+
+#### 5. System Configuration Management
+- ✅ Dynamic system configuration
+- ✅ Key-value configuration store
+- ✅ Configuration categories
+- ✅ Secret configuration masking
+- ✅ Configuration version tracking
+- ✅ Bulk configuration updates
+- ✅ Configuration history with audit trail
+- ✅ Category-based organization
+- ✅ Configuration search and filtering
+- ✅ Admin-only configuration management
+
 ## 🎯 Feature Highlights
 
 ### Security

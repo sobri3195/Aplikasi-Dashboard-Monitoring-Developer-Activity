@@ -126,6 +126,85 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+model SystemPerformance {
+  id              String   @id @default(uuid())
+  cpuUsage        Float
+  memoryUsage     Float
+  memoryTotal     Float
+  memoryFree      Float
+  diskUsage       Float
+  diskTotal       Float
+  diskFree        Float
+  activeConnections Int    @default(0)
+  requestsPerMinute Int    @default(0)
+  timestamp       DateTime @default(now())
+
+  @@index([timestamp])
+  @@map("system_performance")
+}
+
+model BackupRecord {
+  id          String       @id @default(uuid())
+  filename    String
+  filePath    String
+  fileSize    Float
+  backupType  BackupType
+  status      BackupStatus @default(IN_PROGRESS)
+  startedAt   DateTime     @default(now())
+  completedAt DateTime?
+  error       String?
+  createdBy   String?
+
+  @@index([status])
+  @@index([startedAt])
+  @@map("backup_records")
+}
+
+model ApiUsageLog {
+  id          String   @id @default(uuid())
+  endpoint    String
+  method      String
+  statusCode  Int
+  responseTime Float
+  ipAddress   String?
+  userId      String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+
+  @@index([endpoint])
+  @@index([userId])
+  @@index([timestamp])
+  @@map("api_usage_logs")
+}
+
+model SystemLog {
+  id        String    @id @default(uuid())
+  level     LogLevel
+  message   String
+  source    String?
+  metadata  Json?
+  timestamp DateTime  @default(now())
+
+  @@index([level])
+  @@index([timestamp])
+  @@map("system_logs")
+}
+
+model SystemConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  category    String?
+  isSecret    Boolean  @default(false)
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@map("system_configs")
+}
+
 enum UserRole {
   ADMIN
   DEVELOPER
@@ -180,4 +259,26 @@ enum SecurityStatus {
   WARNING
   COMPROMISED
   ENCRYPTED
+}
+
+enum BackupType {
+  FULL
+  INCREMENTAL
+  MANUAL
+  SCHEDULED
+}
+
+enum BackupStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
 }

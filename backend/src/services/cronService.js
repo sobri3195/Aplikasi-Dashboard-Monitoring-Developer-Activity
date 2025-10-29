@@ -174,6 +174,162 @@ class CronService {
 
     this.jobs.push({ name: 'dailySecurityReport', job: dailySecurityReportJob });
 
+    // Record system performance every 5 minutes
+    const recordPerformanceJob = cron.schedule('*/5 * * * *', async () => {
+      try {
+        const os = require('os');
+        const cpuUsage = os.loadavg()[0] / os.cpus().length * 100;
+        const totalMem = os.totalmem();
+        const freeMem = os.freemem();
+        const memoryUsage = ((totalMem - freeMem) / totalMem) * 100;
+
+        await prisma.systemPerformance.create({
+          data: {
+            cpuUsage: parseFloat(cpuUsage.toFixed(2)),
+            memoryUsage: parseFloat(memoryUsage.toFixed(2)),
+            memoryTotal: parseFloat((totalMem / (1024 ** 3)).toFixed(2)),
+            memoryFree: parseFloat((freeMem / (1024 ** 3)).toFixed(2)),
+            diskUsage: 0,
+            diskTotal: 0,
+            diskFree: 0,
+            activeConnections: 0,
+            requestsPerMinute: 0
+          }
+        });
+      } catch (error) {
+        logger.error('Error recording system performance:', error.message);
+      }
+    });
+
+    this.jobs.push({ name: 'recordPerformance', job: recordPerformanceJob });
+
+    // Clean old performance records (keep last 7 days)
+    const cleanPerformanceJob = cron.schedule('0 4 * * *', async () => {
+      try {
+        logger.info('Running performance records cleanup job...');
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        
+        const result = await prisma.systemPerformance.deleteMany({
+          where: {
+            timestamp: {
+              lt: sevenDaysAgo
+            }
+          }
+        });
+
+        logger.info(`Cleaned up ${result.count} old performance records`);
+      } catch (error) {
+        logger.error('Error cleaning performance records:', error.message);
+      }
+    });
+
+    this.jobs.push({ name: 'cleanPerformance', job: cleanPerformanceJob });
+
+    // Clean old API usage logs (keep last 30 days)
+    const cleanApiUsageJob = cron.schedule('0 5 * * *', async () => {
+      try {
+        logger.info('Running API usage logs cleanup job...');
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        
+        const result = await prisma.apiUsageLog.deleteMany({
+          where: {
+            timestamp: {
+              lt: thirtyDaysAgo
+            }
+          }
+        });
+
+        logger.info(`Cleaned up ${result.count} old API usage logs`);
+      } catch (error) {
+        logger.error('Error cleaning API usage logs:', error.message);
+      }
+    });
+
+    this.jobs.push({ name: 'cleanApiUsage', job: cleanApiUsageJob });
+
+    // Automated daily backup
+    const dailyBackupJob = cron.schedule('0 0 * * *', async () => {
+      try {
+        logger.info('Running automated daily backup...');
+        
+        const { exec } = require('child_process');
+        const fs = require('fs').promises;
+        const path = require('path');
+        
+        const BACKUP_DIR = process.env.BACKUP_DIR || path.join(__dirname, '../../backups');
+        await fs.mkdir(BACKUP_DIR, { recursive: true });
+        
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `backup-scheduled-${timestamp}.sql`;
+        const filePath = path.join(BACKUP_DIR, filename);
+        
+        const record = await prisma.backupRecord.create({
+          data: {
+            filename,
+            filePath,
+            fileSize: 0,
+            backupType: 'SCHEDULED',
+            status: 'IN_PROGRESS'
+          }
+        });
+
+        const databaseUrl = process.env.DATABASE_URL;
+        if (!databaseUrl) {
+          throw new Error('DATABASE_URL not configured');
+        }
+
+        const dbUrlMatch = databaseUrl.match(/postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
+        if (!dbUrlMatch) {
+          throw new Error('Invalid DATABASE_URL format');
+        }
+
+        const [, user, password, host, port, database] = dbUrlMatch;
+        const command = `PGPASSWORD="${password}" pg_dump -h ${host} -p ${port} -U ${user} -d ${database} -f ${filePath}`;
+        
+        exec(command, async (error, stdout, stderr) => {
+          if (error) {
+            await prisma.backupRecord.update({
+              where: { id: record.id },
+              data: {
+                status: 'FAILED',
+                error: error.message,
+                completedAt: new Date()
+              }
+            });
+            logger.error('Daily backup failed:', error.message);
+            return;
+          }
+
+          try {
+            const stats = await fs.stat(filePath);
+            await prisma.backupRecord.update({
+              where: { id: record.id },
+              data: {
+                status: 'COMPLETED',
+                fileSize: parseFloat((stats.size / (1024 ** 2)).toFixed(2)),
+                completedAt: new Date()
+              }
+            });
+            logger.info(`Daily backup completed: ${filename}`);
+          } catch (statError) {
+            await prisma.backupRecord.update({
+              where: { id: record.id },
+              data: {
+                status: 'FAILED',
+                error: statError.message,
+                completedAt: new Date()
+              }
+            });
+            logger.error('Daily backup failed:', statError.message);
+          }
+        });
+      } catch (error) {
+        logger.error('Error running daily backup:', error.message);
+      }
+    });
+
+    this.jobs.push({ name: 'dailyBackup', job: dailyBackupJob });
+
     logger.info(`✅ ${this.jobs.length} cron jobs initialized`);
   }
 
