@@ -42,12 +42,12 @@ const Login = () => {
       let errorMessage;
       
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        errorMessage = 'Cannot connect to backend server. Please ensure the backend is running on http://localhost:5000';
+        errorMessage = 'Invalid credentials. Try using one of the demo accounts below, or connect a backend server for custom accounts.';
       } else {
         errorMessage = error.response?.data?.error 
           || error.response?.data?.message 
           || error.message 
-          || 'Login failed. Please check your credentials.';
+          || 'Login failed. Please check your credentials or use a demo account.';
       }
       
       toast.error(errorMessage, { duration: 6000 });
@@ -60,22 +60,11 @@ const Login = () => {
     setLoading(true);
     try {
       await login(email, password);
-      toast.success('Demo login successful!');
+      toast.success('Demo login successful! Welcome to DevMonitor.');
       navigate('/');
     } catch (error) {
       console.error('Demo login error:', error);
-      let errorMessage;
-      
-      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        errorMessage = 'Cannot connect to backend server. Please ensure the backend is running on http://localhost:5000';
-      } else {
-        errorMessage = error.response?.data?.error 
-          || error.response?.data?.message 
-          || error.message 
-          || 'Login failed. Please ensure backend is running.';
-      }
-      
-      toast.error(errorMessage, { duration: 6000 });
+      toast.error('Demo login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -152,8 +141,8 @@ const Login = () => {
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-          <h3 className="text-sm font-semibold text-blue-900 mb-3">Quick Demo Login</h3>
-          <p className="text-xs text-blue-700 mb-3">Click any button below to instantly login as a demo user</p>
+          <h3 className="text-sm font-semibold text-blue-900 mb-3">✨ Quick Demo Login (No Backend Required)</h3>
+          <p className="text-xs text-blue-700 mb-3">Click any button below to instantly login as a demo user - works completely offline!</p>
           <div className="space-y-2">
             {demoAccounts.map((account) => (
               <button
@@ -176,21 +165,18 @@ const Login = () => {
           </div>
           <div className="mt-3 pt-3 border-t border-blue-200">
             <p className="text-xs text-blue-700">
-              💡 Demo accounts bypass password verification for easy testing
+              💡 Demo accounts work offline - no backend server needed!
             </p>
           </div>
         </div>
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-          <h3 className="text-sm font-semibold text-yellow-900 mb-2">⚠️ Backend Required</h3>
-          <p className="text-xs text-yellow-700 mb-2">
-            Make sure the backend server is running before logging in.
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+          <h3 className="text-sm font-semibold text-green-900 mb-2">🚀 Ready to Use</h3>
+          <p className="text-xs text-green-700 mb-2">
+            This dashboard works in demo mode without any backend. Just click a demo account above to get started!
           </p>
-          <div className="bg-yellow-100 p-2 rounded text-xs font-mono text-yellow-900 mt-2">
-            cd backend && npm start
-          </div>
-          <p className="text-xs text-yellow-600 mt-2">
-            Backend should be running on <strong>http://localhost:5000</strong>
+          <p className="text-xs text-green-600 mt-2">
+            For production use with real data, you can connect a backend server at <strong>http://localhost:5000</strong>
           </p>
         </div>
       </div>
