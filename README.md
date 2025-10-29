@@ -4,7 +4,7 @@ A comprehensive system for monitoring developer activities, managing authorized 
 
 ## Features
 
-- 🔍 Real-time monitoring of git activities (clone, pull, push)
+- 🔍 Real-time monitoring of git activities (clone, pull, push, commit, checkout)
 - 🔒 Device registration and authorization
 - 🚨 Automated alerts for suspicious activities
 - 🔐 Automatic encryption for unauthorized access
@@ -12,7 +12,21 @@ A comprehensive system for monitoring developer activities, managing authorized 
 - 🔔 Slack notifications
 - 🌐 GitLab webhook integration
 
-### New System Features
+### Core Monitoring Features
+
+- 🔄 **Git Activity Monitoring** - Clone, pull, push, commit, checkout operations
+- 🚫 **Unauthorized Access Detection** - Block access from unregistered devices
+- 📋 **Repository Copy Detection** - Detect and prevent repo duplication to external devices
+- 🌍 **Location-based Monitoring** - Unusual location detection with alerts
+- 🔐 **Automatic Encryption** - Auto-encrypt repos on unauthorized access
+- 📊 **Security Status Indicators** - Real-time repository and device security status
+- 🔔 **Real-time Notifications** - Slack and dashboard alerts for suspicious activities
+
+> 📖 **For detailed monitoring features documentation, see:**
+> - [MONITORING_FEATURES.md](MONITORING_FEATURES.md) - Complete feature documentation (English)
+> - [PANDUAN_MONITORING.md](PANDUAN_MONITORING.md) - Panduan lengkap (Bahasa Indonesia)
+
+### System Features
 
 - 📈 **System Performance Monitoring** - Real-time CPU, memory, and disk usage tracking
 - 💾 **Backup Management** - Automated database backups with scheduling
@@ -171,21 +185,34 @@ REACT_APP_API_URL=http://localhost:5000
 
 The system comes with pre-seeded demo accounts for testing:
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@devmonitor.com | admin123456 |
-| Developer | developer@devmonitor.com | developer123 |
-| Viewer | viewer@devmonitor.com | viewer123 |
-| Developer | john.doe@example.com | john123 |
-| Developer | jane.smith@example.com | jane123 |
-| Admin | alex.johnson@example.com | alex123 |
+| Role | Email | Password | Description |
+|------|-------|----------|-------------|
+| Admin | admin@devmonitor.com | admin123456 | Main administrator |
+| Admin | alex.johnson@example.com | alex123 | Secondary admin |
+| Developer | developer@devmonitor.com | developer123 | Standard developer |
+| Developer | john.doe@example.com | john123 | Has suspicious activity |
+| Developer | jane.smith@example.com | jane123 | Attempted repo copy |
+| Developer | mike.chen@example.com | mike123 | Access from unusual location |
+| Developer | sarah.williams@example.com | sarah123 | Normal activities |
+| Developer | david.martinez@example.com | david123 | Unusual location (resolved) |
+| Developer | emily.taylor@example.com | emily123 | Normal activities |
+| Viewer | viewer@devmonitor.com | viewer123 | Read-only access |
 
-To seed the database with demo accounts:
+To seed the database with demo accounts and sample data:
 
 ```bash
 cd backend
 npm run db:seed
 ```
+
+This will create:
+- **10 users** (3 admins, 6 developers, 1 viewer)
+- **9 devices** (7 authorized, 1 pending, 1 rejected)
+- **8 repositories** (7 secure, 1 encrypted)
+- **30+ normal activities** (clone, pull, push, commit, checkout)
+- **4 suspicious activities** (unauthorized access, repo copy, unusual location)
+- **4 security alerts** (2 critical, 1 warning resolved)
+- **Audit logs** and **system logs**
 
 ### Registering a Device
 
