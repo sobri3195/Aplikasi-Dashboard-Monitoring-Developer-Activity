@@ -8,15 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  useEffect(() => {
-    if (token) {
-      api.setAuthToken(token);
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
-
   const fetchUser = async () => {
     try {
       const response = await api.get('/api/auth/me');
@@ -28,6 +19,16 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (token) {
+      api.setAuthToken(token);
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   const login = async (email, password) => {
     const response = await api.post('/api/auth/login', { email, password });

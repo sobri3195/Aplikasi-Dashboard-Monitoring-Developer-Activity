@@ -11,6 +11,7 @@ const Devices = () => {
 
   useEffect(() => {
     fetchDevices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const fetchDevices = async () => {
