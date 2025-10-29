@@ -31,11 +31,54 @@ exports.verifyRepositoryAccess = async (req, res) => {
     });
 
     if (!device) {
+      // Log the unauthorized access attempt
+      await prisma.activity.create({
+        data: {
+          userId,
+          activityType: 'UNAUTHORIZED_ACCESS',
+          repository: repositoryId,
+          details: {
+            reason: 'DEVICE_NOT_REGISTERED',
+            fingerprint: fingerprint.substring(0, 16) + '...',
+            repositoryPath
+          },
+          isSuspicious: true,
+          riskLevel: 'HIGH'
+        }
+      });
+
       return res.status(403).json({
         allowed: false,
         reason: 'DEVICE_NOT_REGISTERED',
         message: 'This device is not registered. Please register your device first.',
         fingerprint
+      });
+    }
+
+    // Check device status
+    if (device.status !== 'APPROVED') {
+      // Log the unauthorized access attempt
+      await prisma.activity.create({
+        data: {
+          userId,
+          deviceId: device.id,
+          activityType: 'UNAUTHORIZED_ACCESS',
+          repository: repositoryId,
+          details: {
+            reason: 'DEVICE_NOT_APPROVED',
+            deviceStatus: device.status,
+            repositoryPath
+          },
+          isSuspicious: true,
+          riskLevel: 'HIGH'
+        }
+      });
+
+      return res.status(403).json({
+        allowed: false,
+        reason: 'DEVICE_NOT_APPROVED',
+        message: `Device status is ${device.status}. Administrator approval required.`,
+        deviceStatus: device.status
       });
     }
 
@@ -100,6 +143,7 @@ exports.verifyRepositoryAccess = async (req, res) => {
         repository: repositoryId,
         details: {
           action: 'AUTHORIZED_ACCESS',
+          repositoryPath: repositoryPath,
           packageIntegrity: accessCheck.packageIntegrity
         },
         isSuspicious: false,

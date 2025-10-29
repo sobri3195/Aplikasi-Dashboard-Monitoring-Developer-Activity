@@ -161,7 +161,7 @@ const detectRepositoryCopy = async (repositoryId, deviceId, repositoryPath) => {
     if (!device) {
       return {
         detected: true,
-        reason: 'Unknown device',
+        reason: 'Unknown device attempting repository access',
         risk: 'CRITICAL'
       };
     }
@@ -170,9 +170,63 @@ const detectRepositoryCopy = async (repositoryId, deviceId, repositoryPath) => {
     if (device.status !== 'APPROVED') {
       return {
         detected: true,
-        reason: 'Unauthorized device',
+        reason: `Unauthorized device (status: ${device.status})`,
         risk: 'CRITICAL'
       };
+    }
+
+    // Get repository to check original location
+    const repository = await prisma.repository.findUnique({
+      where: { id: repositoryId }
+    });
+
+    if (!repository) {
+      return {
+        detected: true,
+        reason: 'Repository not found in system',
+        risk: 'CRITICAL'
+      };
+    }
+
+    // Check if repository path matches any trusted paths
+    const repositoryProtectionService = require('./repositoryProtectionService');
+    const isTrusted = await repositoryProtectionService.isTrustedPath(repositoryId, repositoryPath);
+    
+    if (isTrusted) {
+      return {
+        detected: false,
+        reason: 'Repository in trusted path',
+        risk: 'LOW'
+      };
+    }
+
+    // Check previous access from this device
+    const devicePreviousAccess = await prisma.activity.findFirst({
+      where: {
+        repository: repositoryId,
+        deviceId: deviceId,
+        activityType: {
+          in: ['GIT_CLONE', 'REPO_ACCESS']
+        }
+      },
+      orderBy: {
+        timestamp: 'desc'
+      }
+    });
+
+    // If this device has accessed before, check if location changed
+    if (devicePreviousAccess && devicePreviousAccess.details?.repositoryPath) {
+      const previousPath = devicePreviousAccess.details.repositoryPath;
+      
+      if (previousPath !== repositoryPath) {
+        return {
+          detected: true,
+          reason: 'Repository location changed - possible copy or move',
+          risk: 'CRITICAL',
+          previousLocation: previousPath,
+          currentLocation: repositoryPath
+        };
+      }
     }
 
     // Check previous access from other devices
@@ -188,6 +242,9 @@ const detectRepositoryCopy = async (repositoryId, deviceId, repositoryPath) => {
       },
       orderBy: {
         timestamp: 'desc'
+      },
+      include: {
+        device: true
       }
     });
 
@@ -202,7 +259,7 @@ const detectRepositoryCopy = async (repositoryId, deviceId, repositoryPath) => {
           detected: true,
           reason: 'Repository accessed from multiple devices in short time',
           risk: 'HIGH',
-          previousDevice: otherDeviceAccess.deviceId,
+          previousDevice: otherDeviceAccess.device.deviceName,
           timeDiff: hoursDiff
         };
       }
@@ -217,8 +274,9 @@ const detectRepositoryCopy = async (repositoryId, deviceId, repositoryPath) => {
     console.error('Detect repository copy error:', error);
     return {
       detected: true,
-      reason: 'Detection error',
-      risk: 'HIGH'
+      reason: 'Detection error - treating as suspicious',
+      risk: 'HIGH',
+      error: error.message
     };
   }
 };
