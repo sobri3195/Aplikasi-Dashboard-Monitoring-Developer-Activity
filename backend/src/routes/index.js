@@ -26,6 +26,7 @@ const dashboardWidgetRoutes = require('./dashboardWidgetRoutes');
 const emailTemplateRoutes = require('./emailTemplateRoutes');
 const scheduledReportRoutes = require('./scheduledReportRoutes');
 const notificationPreferenceRoutes = require('./notificationPreferenceRoutes');
+const notificationRoutes = require('./notificationRoutes');
 const activityTimelineRoutes = require('./activityTimelineRoutes');
 const repositoryProtectionRoutes = require('./repositoryProtectionRoutes');
 const accessDetectionRoutes = require('./accessDetectionRoutes');
@@ -56,6 +57,7 @@ router.use('/dashboard-widgets', dashboardWidgetRoutes);
 router.use('/email-templates', emailTemplateRoutes);
 router.use('/scheduled-reports', scheduledReportRoutes);
 router.use('/notification-preferences', notificationPreferenceRoutes);
+router.use('/notifications', notificationRoutes);
 router.use('/activity-timeline', activityTimelineRoutes);
 
 // Repository protection routes

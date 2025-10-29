@@ -290,6 +290,78 @@ async function enrichUserData(activityByUser) {
   }));
 }
 
+exports.getMonitoringDashboard = asyncHandler(async (req, res) => {
+  const [
+    recentActivities,
+    devices,
+    repositories,
+    activeAlerts,
+    securityStats
+  ] = await Promise.all([
+    prisma.activity.findMany({
+      take: 20,
+      orderBy: { timestamp: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true
+          }
+        },
+        device: {
+          select: {
+            id: true,
+            deviceName: true,
+            isAuthorized: true,
+            fingerprint: true
+          }
+        }
+      }
+    }),
+    prisma.device.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true
+          }
+        }
+      },
+      orderBy: { lastSeen: 'desc' }
+    }),
+    prisma.repository.findMany({
+      orderBy: { updatedAt: 'desc' }
+    }),
+    prisma.alert.findMany({
+      where: { isResolved: false },
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        activity: {
+          include: {
+            user: true,
+            device: true
+          }
+        }
+      }
+    }),
+    securityService.getSecurityStats()
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      activities: recentActivities,
+      devices,
+      repositories,
+      alerts: activeAlerts,
+      stats: securityStats
+    }
+  });
+});
+
 function getStartDateByRange(range) {
   const now = new Date();
   switch (range) {
