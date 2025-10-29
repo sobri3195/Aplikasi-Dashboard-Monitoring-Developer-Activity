@@ -115,6 +115,9 @@ docker-compose logs -f
 ```bash
 # Run database migrations
 docker-compose exec backend npm run migrate
+
+# (Opsional) Seed database dengan akun demo untuk testing
+docker-compose exec backend npm run db:seed
 ```
 
 #### 6. Akses Dashboard
@@ -124,7 +127,18 @@ Buka browser dan kunjungi:
 - **API Backend**: http://localhost:5000
 - **Health Check**: http://localhost:5000/health
 
-#### 7. Buat Akun Admin
+#### 7. Login ke Sistem
+
+**Opsi A: Gunakan Akun Demo (untuk testing)**
+
+Jika Anda menjalankan seed database, gunakan salah satu akun demo berikut:
+- Admin: `admin@devmonitor.com` / `admin123456`
+- Developer: `developer@devmonitor.com` / `developer123`
+- Viewer: `viewer@devmonitor.com` / `viewer123`
+
+Akun demo lainnya tersedia di halaman login.
+
+**Opsi B: Buat Akun Baru**
 
 1. Kunjungi http://localhost:3000/register
 2. Isi form registrasi dengan email dan password Anda
@@ -367,7 +381,15 @@ docker-compose exec backend npm run migrate
 3. Generate secure keys
 4. Run `docker-compose up -d`
 5. Run migrations: `docker-compose exec backend npm run migrate`
-6. Access dashboard at http://localhost:3000
+6. (Optional) Seed demo accounts: `docker-compose exec backend npm run db:seed`
+7. Access dashboard at http://localhost:3000
+
+**Demo Accounts** (if seeded):
+- Admin: `admin@devmonitor.com` / `admin123456`
+- Developer: `developer@devmonitor.com` / `developer123`
+- Viewer: `viewer@devmonitor.com` / `viewer123`
+
+Additional demo accounts are displayed on the login page.
 
 For detailed English documentation, see DEPLOYMENT.md
 

@@ -104,6 +104,42 @@ const Login = () => {
             </div>
           </form>
         </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">Demo Accounts</h3>
+          <div className="space-y-2 text-xs text-blue-800">
+            <div className="bg-white p-2 rounded border border-blue-100">
+              <div className="font-medium">Admin Account</div>
+              <div className="text-blue-600">admin@devmonitor.com</div>
+              <div className="text-blue-600">admin123456</div>
+            </div>
+            <div className="bg-white p-2 rounded border border-blue-100">
+              <div className="font-medium">Developer Account</div>
+              <div className="text-blue-600">developer@devmonitor.com</div>
+              <div className="text-blue-600">developer123</div>
+            </div>
+            <div className="bg-white p-2 rounded border border-blue-100">
+              <div className="font-medium">Viewer Account</div>
+              <div className="text-blue-600">viewer@devmonitor.com</div>
+              <div className="text-blue-600">viewer123</div>
+            </div>
+            <div className="bg-white p-2 rounded border border-blue-100">
+              <div className="font-medium">John Doe (Developer)</div>
+              <div className="text-blue-600">john.doe@example.com</div>
+              <div className="text-blue-600">john123</div>
+            </div>
+            <div className="bg-white p-2 rounded border border-blue-100">
+              <div className="font-medium">Jane Smith (Developer)</div>
+              <div className="text-blue-600">jane.smith@example.com</div>
+              <div className="text-blue-600">jane123</div>
+            </div>
+            <div className="bg-white p-2 rounded border border-blue-100">
+              <div className="font-medium">Alex Johnson (Admin)</div>
+              <div className="text-blue-600">alex.johnson@example.com</div>
+              <div className="text-blue-600">alex123</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

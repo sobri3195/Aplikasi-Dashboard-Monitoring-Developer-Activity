@@ -139,6 +139,26 @@ REACT_APP_API_URL=http://localhost:5000
 
 ## Usage
 
+### Demo Accounts
+
+The system comes with pre-seeded demo accounts for testing:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@devmonitor.com | admin123456 |
+| Developer | developer@devmonitor.com | developer123 |
+| Viewer | viewer@devmonitor.com | viewer123 |
+| Developer | john.doe@example.com | john123 |
+| Developer | jane.smith@example.com | jane123 |
+| Admin | alex.johnson@example.com | alex123 |
+
+To seed the database with demo accounts:
+
+```bash
+cd backend
+npm run db:seed
+```
+
 ### Registering a Device
 
 ```bash
