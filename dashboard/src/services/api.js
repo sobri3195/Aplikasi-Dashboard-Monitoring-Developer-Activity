@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { isDemoMode, getMockResponse } from './mockData';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -10,11 +11,28 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    if (isDemoMode()) {
+      const mockResponse = getMockResponse(config.url, config.method, config.data);
+      if (mockResponse) {
+        config.adapter = () => {
+          return Promise.resolve({
+            data: mockResponse,
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config: config,
+            request: {}
+          });
+        };
+      }
+    }
+
     return config;
   },
   (error) => {
