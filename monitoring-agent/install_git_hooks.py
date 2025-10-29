@@ -49,11 +49,64 @@ exit 0
 '''
 
 POST_CHECKOUT_HOOK = '''#!/bin/bash
-# Post-checkout hook - Verify repository location
+# Post-checkout hook - Verify device and repository location
+
+# This hook runs after git checkout and after git clone completes
+# Arguments: $1 = previous HEAD, $2 = new HEAD, $3 = flag (1 = branch checkout, 0 = file checkout)
+
+# Only run on branch checkouts or after clone
+if [ "$3" = "0" ]; then
+    exit 0
+fi
+
+echo "🔍 Verifying device and repository access..."
+
+# Get configuration from environment or .env file
+if [ -f ".env" ]; then
+    source .env
+fi
+
+API_URL="${API_URL:-http://localhost:5000}"
+API_TOKEN="${API_TOKEN}"
+REPO_ID="${REPO_ID}"
+
+# Check if monitoring agent is available
+if [ ! -f "monitoring-agent/copy_detection_monitor.py" ]; then
+    echo "⚠️  Warning: Monitoring agent not found"
+    echo "   Repository protection may not be active."
+    exit 0
+fi
+
+# If this is a new clone (no previous HEAD), perform initial device verification
+if [ "$1" = "0000000000000000000000000000000000000000" ]; then
+    echo "🔍 New repository clone detected - verifying device registration..."
+    
+    # Run device verification
+    python3 monitoring-agent/repo_protection_agent.py verify \\
+        --api-url "$API_URL" \\
+        --token "$API_TOKEN" \\
+        --repo-id "$REPO_ID" \\
+        --repo-path "."
+    
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "❌ Device not registered or not approved!"
+        echo ""
+        echo "   This repository requires device registration."
+        echo "   Please register your device:"
+        echo ""
+        echo "   python3 monitoring-agent/repo_protection_agent.py register --device-name \\"My Device\\""
+        echo ""
+        echo "   Then wait for administrator approval."
+        exit 1
+    fi
+    
+    echo "✅ Device verified successfully"
+fi
 
 # Check if repository was moved/copied
 python3 monitoring-agent/copy_detection_monitor.py \\
-    --api-url "${API_URL:-http://localhost:5000}" \\
+    --api-url "$API_URL" \\
     --token "$API_TOKEN" \\
     --repo-id "$REPO_ID" \\
     --repo-path "."

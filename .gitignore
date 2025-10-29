@@ -53,3 +53,9 @@ backups/
 # Temporary files
 tmp/
 temp/
+
+# Repository protection metadata (should not be committed)
+.repo-metadata.json
+.repo-encrypted.lock
+.repo-access-blocked
+.repo-setup-instructions.md

@@ -89,6 +89,7 @@ class RepositoryProtectionAgent:
             fingerprint, device_info = self.get_device_fingerprint()
             
             if not fingerprint:
+                print("❌ Failed to generate device fingerprint")
                 return {
                     'allowed': False,
                     'message': 'Failed to generate device fingerprint'
@@ -97,6 +98,8 @@ class RepositoryProtectionAgent:
             # Check local protection first
             protection_check = self.check_repository_protection(repo_path)
             if protection_check['protected']:
+                print(f"❌ Repository is {protection_check['type']}")
+                print(f"   {protection_check['message']}")
                 return {
                     'allowed': False,
                     'message': protection_check['message'],
@@ -104,31 +107,56 @@ class RepositoryProtectionAgent:
                 }
             
             # Verify with backend
-            response = requests.post(
-                f'{self.api_url}/api/repository-protection/verify-access',
-                headers=self.headers,
-                json={
-                    'repositoryId': repository_id,
-                    'repositoryPath': str(repo_path)
-                }
-            )
+            try:
+                response = requests.post(
+                    f'{self.api_url}/api/repository-protection/verify-access',
+                    headers=self.headers,
+                    json={
+                        'repositoryId': repository_id,
+                        'repositoryPath': str(repo_path)
+                    },
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    print("✅ Device verified and access authorized")
+                    return result
+                elif response.status_code == 403:
+                    result = response.json()
+                    reason = result.get('reason', 'UNKNOWN')
+                    
+                    print(f"❌ Access denied: {reason}")
+                    print(f"   {result.get('message', 'Access not authorized')}")
+                    
+                    # If repository was encrypted/blocked, create local lock
+                    if reason in ['COPY_DETECTED', 'DEVICE_NOT_APPROVED', 'DEVICE_NOT_REGISTERED']:
+                        self.create_local_lock(repo_path, result)
+                    
+                    return result
+                else:
+                    print(f"❌ Verification failed with status: {response.status_code}")
+                    return {
+                        'allowed': False,
+                        'message': f'Verification failed: {response.status_code}'
+                    }
             
-            if response.status_code == 200:
-                return response.json()
-            elif response.status_code == 403:
-                result = response.json()
-                # If repository was encrypted/blocked, create local lock
-                if result.get('reason') in ['COPY_DETECTED', 'DEVICE_NOT_APPROVED']:
-                    self.create_local_lock(repo_path, result)
-                return result
-            else:
+            except requests.exceptions.ConnectionError:
+                print("❌ Cannot connect to backend server")
+                print("   Please ensure the backend is running and accessible")
                 return {
                     'allowed': False,
-                    'message': f'Verification failed: {response.status_code}'
+                    'message': 'Backend server not accessible'
+                }
+            except requests.exceptions.Timeout:
+                print("❌ Backend request timed out")
+                return {
+                    'allowed': False,
+                    'message': 'Backend request timeout'
                 }
         
         except Exception as e:
-            print(f"Error verifying access: {e}")
+            print(f"❌ Error verifying access: {e}")
             return {
                 'allowed': False,
                 'message': f'Verification error: {str(e)}'

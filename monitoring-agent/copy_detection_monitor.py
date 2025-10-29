@@ -125,13 +125,24 @@ class RepositoryCopyDetector:
         if current_path != self.original_location:
             # Check if it's in trusted paths
             if not self.is_trusted_location():
-                return {
+                # Additional checks to determine if this is a copy or move
+                detection_details = {
                     'detected': True,
                     'reason': 'UNAUTHORIZED_LOCATION',
                     'original_location': self.original_location,
                     'current_location': current_path,
                     'risk_level': 'CRITICAL'
                 }
+                
+                # Check if original location still exists (indicates copy, not move)
+                if Path(self.original_location).exists():
+                    detection_details['action_type'] = 'COPY'
+                    detection_details['message'] = 'Repository appears to be copied (original still exists)'
+                else:
+                    detection_details['action_type'] = 'MOVE'
+                    detection_details['message'] = 'Repository appears to be moved (original no longer exists)'
+                
+                return detection_details
         
         return {
             'detected': False,
