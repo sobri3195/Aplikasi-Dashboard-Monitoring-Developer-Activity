@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { emitToDashboard } = require('../services/socketService');
+const autoEncryptionService = require('../services/autoEncryptionService');
 
 const prisma = new PrismaClient();
 
@@ -140,5 +141,53 @@ exports.getAlertStats = asyncHandler(async (req, res) => {
       alertsBySeverity,
       alertsByType
     }
+  });
+});
+
+exports.createAlert = asyncHandler(async (req, res) => {
+  const { activityId, alertType, severity, message, details } = req.body;
+
+  if (!severity || !message) {
+    throw new AppError('Severity and message are required', 400);
+  }
+
+  const alert = await prisma.alert.create({
+    data: {
+      activityId,
+      alertType,
+      severity,
+      message,
+      details,
+      isResolved: false
+    },
+    include: {
+      activity: {
+        include: {
+          user: true,
+          device: true
+        }
+      }
+    }
+  });
+
+  emitToDashboard('alert-created', alert);
+
+  // Trigger auto-encryption if conditions are met
+  if (severity === 'CRITICAL' || severity === 'WARNING') {
+    const encryptionResult = await autoEncryptionService.triggerAutoEncryption(alert, alert.activity);
+    
+    if (encryptionResult.success && encryptionResult.encrypted) {
+      alert.autoEncrypted = true;
+      alert.encryptionDetails = {
+        repositoryId: encryptionResult.repositoryId,
+        repositoryPath: encryptionResult.repositoryPath
+      };
+    }
+  }
+
+  res.status(201).json({
+    success: true,
+    message: 'Alert created successfully',
+    data: alert
   });
 });
