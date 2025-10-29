@@ -70,11 +70,19 @@ const isDemoAccount = (email) => {
 exports.login = asyncHandler(async (req, res) => {
   const { email, password } = req.validatedData;
 
+  logger.info(`Login attempt for: ${email}`);
+
   const user = await prisma.user.findUnique({
     where: { email }
   });
 
-  if (!user || !user.isActive) {
+  if (!user) {
+    logger.warn(`Login failed: User not found - ${email}`);
+    throw new AppError('Invalid credentials', 401);
+  }
+
+  if (!user.isActive) {
+    logger.warn(`Login failed: User inactive - ${email}`);
     throw new AppError('Invalid credentials', 401);
   }
 
@@ -82,9 +90,12 @@ exports.login = asyncHandler(async (req, res) => {
 
   if (isDemoAccount(email)) {
     isPasswordValid = true;
-    logger.info(`Demo account bypass used for: ${email}`);
+    logger.info(`✅ Demo account bypass used for: ${email}`);
   } else {
     isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      logger.warn(`Login failed: Invalid password for ${email}`);
+    }
   }
 
   if (!isPasswordValid) {
@@ -93,16 +104,21 @@ exports.login = asyncHandler(async (req, res) => {
 
   const token = generateToken(user.id);
 
-  await prisma.activity.create({
-    data: {
-      userId: user.id,
-      deviceId: req.body.deviceId || null,
-      activityType: 'LOGIN',
-      ipAddress: req.ip
-    }
-  }).catch(err => logger.error('Failed to log login activity:', err));
+  try {
+    await prisma.activity.create({
+      data: {
+        userId: user.id,
+        deviceId: req.body.deviceId || null,
+        activityType: 'LOGIN',
+        ipAddress: req.ip
+      }
+    });
+    logger.info(`Activity logged for user: ${email}`);
+  } catch (err) {
+    logger.error('Failed to log login activity:', err);
+  }
 
-  logger.info(`User logged in: ${email}`);
+  logger.info(`✅ User logged in successfully: ${email}`);
 
   res.json({
     success: true,

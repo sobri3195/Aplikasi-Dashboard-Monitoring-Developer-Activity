@@ -32,7 +32,7 @@ const activityLogSchema = Joi.object({
 
 const userLoginSchema = Joi.object({
   email: Joi.string().email().required(),
-  password: Joi.string().min(6).required()
+  password: Joi.string().min(1).required()
 });
 
 const userRegistrationSchema = Joi.object({
