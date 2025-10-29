@@ -78,10 +78,11 @@ model Activity {
 
 model Alert {
   id          String      @id @default(uuid())
-  activityId  String
-  alertType   AlertType
+  activityId  String?
+  alertType   AlertType?
   severity    Severity
   message     String
+  details     Json?
   isResolved  Boolean     @default(false)
   resolvedAt  DateTime?
   resolvedBy  String?
@@ -90,7 +91,7 @@ model Alert {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  activity Activity? @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
   @@index([isResolved])
   @@index([severity])
@@ -106,6 +107,7 @@ model Repository {
   isEncrypted     Boolean          @default(false)
   encryptedAt     DateTime?
   securityStatus  SecurityStatus   @default(SECURE)
+  trustedPaths    String[]         @default([])
   lastActivity    DateTime?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt

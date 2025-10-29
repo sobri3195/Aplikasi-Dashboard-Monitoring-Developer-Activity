@@ -474,3 +474,132 @@ exports.forceEncryptRepository = async (req, res) => {
     res.status(500).json({ error: 'Failed to encrypt repository' });
   }
 };
+
+/**
+ * Add trusted path to repository (Admin only)
+ */
+exports.addTrustedPath = async (req, res) => {
+  try {
+    const { repositoryId, trustedPath } = req.body;
+
+    if (!repositoryId || !trustedPath) {
+      return res.status(400).json({ 
+        error: 'Repository ID and trusted path are required' 
+      });
+    }
+
+    const result = await repositoryProtectionService.addTrustedPath(
+      repositoryId,
+      trustedPath
+    );
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    // Log the action
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user.id,
+        action: 'TRUSTED_PATH_ADDED',
+        entity: 'Repository',
+        entityId: repositoryId,
+        changes: {
+          trustedPath,
+          timestamp: new Date().toISOString()
+        },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent')
+      }
+    });
+
+    res.json({
+      success: true,
+      message: result.message,
+      trustedPaths: result.trustedPaths
+    });
+  } catch (error) {
+    console.error('Add trusted path error:', error);
+    res.status(500).json({ error: 'Failed to add trusted path' });
+  }
+};
+
+/**
+ * Remove trusted path from repository (Admin only)
+ */
+exports.removeTrustedPath = async (req, res) => {
+  try {
+    const { repositoryId, trustedPath } = req.body;
+
+    if (!repositoryId || !trustedPath) {
+      return res.status(400).json({ 
+        error: 'Repository ID and trusted path are required' 
+      });
+    }
+
+    const result = await repositoryProtectionService.removeTrustedPath(
+      repositoryId,
+      trustedPath
+    );
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    // Log the action
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user.id,
+        action: 'TRUSTED_PATH_REMOVED',
+        entity: 'Repository',
+        entityId: repositoryId,
+        changes: {
+          trustedPath,
+          timestamp: new Date().toISOString()
+        },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent')
+      }
+    });
+
+    res.json({
+      success: true,
+      message: result.message,
+      trustedPaths: result.trustedPaths
+    });
+  } catch (error) {
+    console.error('Remove trusted path error:', error);
+    res.status(500).json({ error: 'Failed to remove trusted path' });
+  }
+};
+
+/**
+ * Get trusted paths for repository
+ */
+exports.getTrustedPaths = async (req, res) => {
+  try {
+    const { repositoryId } = req.params;
+
+    const repository = await prisma.repository.findUnique({
+      where: { id: repositoryId },
+      select: {
+        id: true,
+        name: true,
+        trustedPaths: true
+      }
+    });
+
+    if (!repository) {
+      return res.status(404).json({ error: 'Repository not found' });
+    }
+
+    res.json({
+      repositoryId: repository.id,
+      repositoryName: repository.name,
+      trustedPaths: repository.trustedPaths || []
+    });
+  } catch (error) {
+    console.error('Get trusted paths error:', error);
+    res.status(500).json({ error: 'Failed to get trusted paths' });
+  }
+};
