@@ -22,4 +22,9 @@ router.get('/status/:repositoryId', repositoryProtectionController.getProtection
 router.post('/decrypt', authorize(['ADMIN']), repositoryProtectionController.decryptRepository);
 router.post('/force-encrypt', authorize(['ADMIN']), repositoryProtectionController.forceEncryptRepository);
 
+// Trusted paths management (Admin only)
+router.post('/trusted-paths/add', authorize(['ADMIN']), repositoryProtectionController.addTrustedPath);
+router.post('/trusted-paths/remove', authorize(['ADMIN']), repositoryProtectionController.removeTrustedPath);
+router.get('/trusted-paths/:repositoryId', repositoryProtectionController.getTrustedPaths);
+
 module.exports = router;

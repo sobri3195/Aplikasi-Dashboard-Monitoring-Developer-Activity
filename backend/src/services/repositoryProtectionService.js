@@ -288,12 +288,137 @@ const checkRepositoryAccess = async (repositoryId, deviceId, repositoryPath) => 
 };
 
 /**
+ * Check if path is in trusted paths
+ */
+const isTrustedPath = async (repositoryId, repositoryPath) => {
+  try {
+    // Get repository with trusted paths
+    const repository = await prisma.repository.findUnique({
+      where: { id: repositoryId }
+    });
+
+    if (!repository || !repository.trustedPaths) {
+      return false;
+    }
+
+    const trustedPaths = repository.trustedPaths;
+    const normalizedPath = path.resolve(repositoryPath);
+
+    // Check if current path is in trusted paths
+    for (const trustedPath of trustedPaths) {
+      const normalizedTrustedPath = path.resolve(trustedPath);
+      if (normalizedPath === normalizedTrustedPath || normalizedPath.startsWith(normalizedTrustedPath)) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Check trusted path error:', error);
+    return false;
+  }
+};
+
+/**
+ * Add trusted path to repository
+ */
+const addTrustedPath = async (repositoryId, trustedPath) => {
+  try {
+    const repository = await prisma.repository.findUnique({
+      where: { id: repositoryId }
+    });
+
+    if (!repository) {
+      return {
+        success: false,
+        message: 'Repository not found'
+      };
+    }
+
+    const trustedPaths = repository.trustedPaths || [];
+    const normalizedPath = path.resolve(trustedPath);
+
+    if (!trustedPaths.includes(normalizedPath)) {
+      trustedPaths.push(normalizedPath);
+
+      await prisma.repository.update({
+        where: { id: repositoryId },
+        data: { trustedPaths }
+      });
+    }
+
+    return {
+      success: true,
+      message: 'Trusted path added',
+      trustedPaths
+    };
+  } catch (error) {
+    console.error('Add trusted path error:', error);
+    return {
+      success: false,
+      message: 'Failed to add trusted path',
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Remove trusted path from repository
+ */
+const removeTrustedPath = async (repositoryId, trustedPath) => {
+  try {
+    const repository = await prisma.repository.findUnique({
+      where: { id: repositoryId }
+    });
+
+    if (!repository) {
+      return {
+        success: false,
+        message: 'Repository not found'
+      };
+    }
+
+    const trustedPaths = repository.trustedPaths || [];
+    const normalizedPath = path.resolve(trustedPath);
+    const updatedPaths = trustedPaths.filter(p => p !== normalizedPath);
+
+    await prisma.repository.update({
+      where: { id: repositoryId },
+      data: { trustedPaths: updatedPaths }
+    });
+
+    return {
+      success: true,
+      message: 'Trusted path removed',
+      trustedPaths: updatedPaths
+    };
+  } catch (error) {
+    console.error('Remove trusted path error:', error);
+    return {
+      success: false,
+      message: 'Failed to remove trusted path',
+      error: error.message
+    };
+  }
+};
+
+/**
  * Handle repository copy detection
  */
 const handleRepositoryCopyDetection = async (repositoryId, deviceId, repositoryPath) => {
   try {
     const repositoryIntegrityService = require('./repositoryIntegrityService');
     
+    // Check if path is trusted first
+    const isTrusted = await isTrustedPath(repositoryId, repositoryPath);
+    if (isTrusted) {
+      return {
+        success: true,
+        copyDetected: false,
+        message: 'Repository is in trusted path'
+      };
+    }
+
     // Detect copy attempt
     const copyDetection = await repositoryIntegrityService.detectRepositoryCopy(
       repositoryId,
@@ -302,6 +427,22 @@ const handleRepositoryCopyDetection = async (repositoryId, deviceId, repositoryP
     );
 
     if (copyDetection.detected) {
+      // Create alert immediately
+      await prisma.alert.create({
+        data: {
+          severity: 'CRITICAL',
+          message: `Repository copy detected: ${copyDetection.reason}`,
+          details: {
+            repositoryId,
+            deviceId,
+            repositoryPath,
+            reason: copyDetection.reason,
+            risk: copyDetection.risk
+          },
+          isResolved: false
+        }
+      });
+
       // Encrypt repository immediately
       const encryptResult = await encryptRepository(
         repositoryPath,
@@ -323,7 +464,8 @@ const handleRepositoryCopyDetection = async (repositoryId, deviceId, repositoryP
         copyDetected: true,
         action: 'ENCRYPTED_AND_BLOCKED',
         reason: copyDetection.reason,
-        risk: copyDetection.risk
+        risk: copyDetection.risk,
+        alertCreated: true
       };
     }
 
@@ -349,5 +491,8 @@ module.exports = {
   blockRepositoryAccess,
   validatePackageIntegrity,
   checkRepositoryAccess,
-  handleRepositoryCopyDetection
+  handleRepositoryCopyDetection,
+  isTrustedPath,
+  addTrustedPath,
+  removeTrustedPath
 };

@@ -25,10 +25,15 @@ A comprehensive system for monitoring developer activities, managing authorized 
 - 🔐 **Automatic Encryption** - Auto-encrypt repos on unauthorized access
 - 📊 **Security Status Indicators** - Real-time repository and device security status
 - 🔔 **Real-time Notifications** - Slack and dashboard alerts for suspicious activities
+- 🔒 **Device Verification on Clone** - Verify device ID when repository is cloned
+- ⚡ **Real-time Copy Detection** - Immediate alerts and encryption on unauthorized copy
+- 🛡️ **Trusted Paths** - Configure trusted locations for repository access
 
 > 📖 **For detailed monitoring features documentation, see:**
 > - [MONITORING_FEATURES.md](MONITORING_FEATURES.md) - Complete feature documentation (English)
 > - [PANDUAN_MONITORING.md](PANDUAN_MONITORING.md) - Panduan lengkap (Bahasa Indonesia)
+> - [DEVICE_VERIFICATION_AND_COPY_PROTECTION.md](DEVICE_VERIFICATION_AND_COPY_PROTECTION.md) - Device verification & copy detection (English)
+> - [PANDUAN_PROTEKSI_COPY.md](PANDUAN_PROTEKSI_COPY.md) - Panduan proteksi copy (Bahasa Indonesia)
 
 ### System Features
 
