@@ -29,6 +29,7 @@ const notificationPreferenceRoutes = require('./notificationPreferenceRoutes');
 const activityTimelineRoutes = require('./activityTimelineRoutes');
 const repositoryProtectionRoutes = require('./repositoryProtectionRoutes');
 const accessDetectionRoutes = require('./accessDetectionRoutes');
+const autoEncryptionRoutes = require('./autoEncryptionRoutes');
 
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
@@ -62,5 +63,8 @@ router.use('/repository-protection', repositoryProtectionRoutes);
 
 // Access detection and protection routes
 router.use('/access-detection', accessDetectionRoutes);
+
+// Auto-encryption routes
+router.use('/auto-encryption', autoEncryptionRoutes);
 
 module.exports = router;

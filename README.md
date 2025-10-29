@@ -7,7 +7,7 @@ A comprehensive system for monitoring developer activities, managing authorized 
 - 🔍 Real-time monitoring of git activities (clone, pull, push, commit, checkout)
 - 🔒 Device registration and authorization
 - 🚨 Automated alerts for suspicious activities
-- 🔐 Automatic encryption for unauthorized access
+- 🔐 **NEW! Auto-Encryption Mechanism** - Automatic repository encryption on suspicious alerts
 - 📊 Interactive dashboard with security indicators
 - 🔔 Slack notifications
 - 🌐 GitLab webhook integration
@@ -23,6 +23,14 @@ A comprehensive system for monitoring developer activities, managing authorized 
 > - Automatic encryption when unauthorized access detected
 > - Alerts to Slack and dashboard in real-time
 > - Skip encryption for authorized transfers through official channels
+>
+> 🔒 **NEW! Auto-Encryption Mechanism:**
+> - [AUTO_ENCRYPTION_MECHANISM.md](AUTO_ENCRYPTION_MECHANISM.md) - Technical documentation (English)
+> - [PANDUAN_AUTO_ENKRIPSI.md](PANDUAN_AUTO_ENKRIPSI.md) - Panduan lengkap (Bahasa Indonesia)
+> - Automatic repository encryption when suspicious alerts detected
+> - Manual verification by security admin required to decrypt
+> - Transparent access for authorized devices on approved paths
+> - Complete audit trail for compliance
 
 ### Core Monitoring Features
 

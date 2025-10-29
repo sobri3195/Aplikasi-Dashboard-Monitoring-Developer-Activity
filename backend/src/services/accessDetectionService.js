@@ -5,6 +5,15 @@ const socketService = require('./socketService');
 
 const prisma = new PrismaClient();
 
+// Import auto-encryption service (lazy load to avoid circular dependency)
+let autoEncryptionService = null;
+const getAutoEncryptionService = () => {
+  if (!autoEncryptionService) {
+    autoEncryptionService = require('./autoEncryptionService');
+  }
+  return autoEncryptionService;
+};
+
 /**
  * Monitor git operation activities
  * Monitors clone, pull, and push operations in real-time
