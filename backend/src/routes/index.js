@@ -32,6 +32,12 @@ const repositoryProtectionRoutes = require('./repositoryProtectionRoutes');
 const accessDetectionRoutes = require('./accessDetectionRoutes');
 const autoEncryptionRoutes = require('./autoEncryptionRoutes');
 
+// Dashboard enhancement routes
+const developerStatsRoutes = require('./developerStatsRoutes');
+const securityLogRoutes = require('./securityLogRoutes');
+const behavioralAnalyticsRoutes = require('./behavioralAnalyticsRoutes');
+const deviceVerificationRoutes = require('./deviceVerificationRoutes');
+
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/devices', deviceRoutes);
@@ -68,5 +74,11 @@ router.use('/access-detection', accessDetectionRoutes);
 
 // Auto-encryption routes
 router.use('/auto-encryption', autoEncryptionRoutes);
+
+// Dashboard enhancement routes
+router.use('/developer-stats', developerStatsRoutes);
+router.use('/security-logs', securityLogRoutes);
+router.use('/behavioral-analytics', behavioralAnalyticsRoutes);
+router.use('/device-verification', deviceVerificationRoutes);
 
 module.exports = router;

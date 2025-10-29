@@ -45,6 +45,7 @@ model Device {
 
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   activities Activity[]
+  syncStatus DeviceSyncStatus?
 
   @@map("devices")
 }
@@ -431,4 +432,134 @@ enum ExportStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+model DeviceSyncStatus {
+  id          String   @id @default(uuid())
+  deviceId    String   @unique
+  lastSyncAt  DateTime @default(now())
+  syncStatus  SyncStatus @default(SYNCED)
+  syncErrors  Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@index([lastSyncAt])
+  @@map("device_sync_status")
+}
+
+model SecurityLog {
+  id          String   @id @default(uuid())
+  logType     SecurityLogType
+  severity    Severity
+  userId      String?
+  deviceId    String?
+  ipAddress   String?
+  message     String
+  details     Json?
+  timestamp   DateTime @default(now())
+
+  @@index([logType])
+  @@index([severity])
+  @@index([userId])
+  @@index([timestamp])
+  @@map("security_logs")
+}
+
+model BehavioralPattern {
+  id                String   @id @default(uuid())
+  userId            String
+  deviceId          String?
+  patternType       PatternType
+  normalBehavior    Json
+  threshold         Float    @default(0.8)
+  lastUpdated       DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  @@unique([userId, deviceId, patternType])
+  @@index([userId])
+  @@map("behavioral_patterns")
+}
+
+model AnomalyDetection {
+  id               String   @id @default(uuid())
+  userId           String
+  deviceId         String?
+  activityId       String?
+  anomalyType      AnomalyType
+  anomalyScore     Float
+  description      String
+  details          Json?
+  isReviewed       Boolean  @default(false)
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  isFalsePositive  Boolean  @default(false)
+  timestamp        DateTime @default(now())
+
+  @@index([userId])
+  @@index([anomalyType])
+  @@index([isReviewed])
+  @@index([timestamp])
+  @@map("anomaly_detections")
+}
+
+model DeviceVerificationRequest {
+  id          String   @id @default(uuid())
+  deviceId    String
+  requestedBy String
+  reason      String?
+  status      VerificationRequestStatus @default(PENDING)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([deviceId])
+  @@index([status])
+  @@map("device_verification_requests")
+}
+
+enum SyncStatus {
+  SYNCED
+  SYNCING
+  ERROR
+  OUTDATED
+}
+
+enum SecurityLogType {
+  AUTH_FAILURE
+  UNAUTHORIZED_ACCESS
+  DEVICE_CHANGE
+  IP_CHANGE
+  SUSPICIOUS_ACTIVITY
+  POLICY_VIOLATION
+  DATA_EXPORT
+  CONFIG_CHANGE
+}
+
+enum PatternType {
+  ACCESS_TIME
+  GIT_COMMAND_FREQUENCY
+  REPOSITORY_ACCESS
+  LOCATION_PATTERN
+  DEVICE_USAGE
+}
+
+enum AnomalyType {
+  UNUSUAL_TIME
+  HIGH_FREQUENCY
+  UNUSUAL_LOCATION
+  UNUSUAL_REPOSITORY
+  UNUSUAL_DEVICE
+  UNUSUAL_COMMAND_PATTERN
+  DATA_EXFILTRATION
+}
+
+enum VerificationRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
 }
