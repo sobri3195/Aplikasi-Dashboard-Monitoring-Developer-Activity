@@ -17,6 +17,17 @@ const apiUsageRoutes = require('./apiUsageRoutes');
 const systemLogRoutes = require('./systemLogRoutes');
 const systemConfigRoutes = require('./systemConfigRoutes');
 
+// New features routes
+const twoFactorRoutes = require('./twoFactorRoutes');
+const sessionRoutes = require('./sessionRoutes');
+const ipControlRoutes = require('./ipControlRoutes');
+const exportRoutes = require('./exportRoutes');
+const dashboardWidgetRoutes = require('./dashboardWidgetRoutes');
+const emailTemplateRoutes = require('./emailTemplateRoutes');
+const scheduledReportRoutes = require('./scheduledReportRoutes');
+const notificationPreferenceRoutes = require('./notificationPreferenceRoutes');
+const activityTimelineRoutes = require('./activityTimelineRoutes');
+
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/devices', deviceRoutes);
@@ -32,5 +43,16 @@ router.use('/backups', backupRoutes);
 router.use('/api-usage', apiUsageRoutes);
 router.use('/system-logs', systemLogRoutes);
 router.use('/system-config', systemConfigRoutes);
+
+// New features routes
+router.use('/2fa', twoFactorRoutes);
+router.use('/sessions', sessionRoutes);
+router.use('/ip-control', ipControlRoutes);
+router.use('/export', exportRoutes);
+router.use('/dashboard-widgets', dashboardWidgetRoutes);
+router.use('/email-templates', emailTemplateRoutes);
+router.use('/scheduled-reports', scheduledReportRoutes);
+router.use('/notification-preferences', notificationPreferenceRoutes);
+router.use('/activity-timeline', activityTimelineRoutes);
 
 module.exports = router;

@@ -14,11 +14,15 @@ model User {
   password  String
   role      UserRole @default(DEVELOPER)
   isActive  Boolean  @default(true)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   devices    Device[]
   activities Activity[]
+  sessions   UserSession[]
+  notificationPreferences NotificationPreference[]
 
   @@map("users")
 }
@@ -281,4 +285,148 @@ enum LogLevel {
   WARNING
   ERROR
   CRITICAL
+}
+
+model UserSession {
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  ipAddress    String?
+  userAgent    String?
+  isActive     Boolean  @default(true)
+  expiresAt    DateTime
+  lastActivity DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+model IpWhitelist {
+  id          String   @id @default(uuid())
+  ipAddress   String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("ip_whitelist")
+}
+
+model IpBlacklist {
+  id          String   @id @default(uuid())
+  ipAddress   String   @unique
+  reason      String?
+  isActive    Boolean  @default(true)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("ip_blacklist")
+}
+
+model DashboardWidget {
+  id        String   @id @default(uuid())
+  userId    String
+  widgetType String
+  position  Int
+  size      String   @default("medium")
+  settings  Json?
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("dashboard_widgets")
+}
+
+model EmailTemplate {
+  id          String   @id @default(uuid())
+  templateKey String   @unique
+  subject     String
+  htmlContent String
+  textContent String?
+  variables   Json?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("email_templates")
+}
+
+model ScheduledReport {
+  id          String       @id @default(uuid())
+  reportName  String
+  reportType  String
+  schedule    String
+  recipients  Json
+  filters     Json?
+  isActive    Boolean      @default(true)
+  lastRun     DateTime?
+  nextRun     DateTime?
+  createdBy   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([nextRun])
+  @@map("scheduled_reports")
+}
+
+model NotificationPreference {
+  id            String   @id @default(uuid())
+  userId        String
+  channel       String
+  alertTypes    Json
+  isEnabled     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channel])
+  @@map("notification_preferences")
+}
+
+model ExportJob {
+  id          String       @id @default(uuid())
+  exportType  String
+  format      String
+  filters     Json?
+  status      ExportStatus @default(PENDING)
+  fileName    String?
+  filePath    String?
+  fileSize    Float?
+  createdBy   String?
+  createdAt   DateTime     @default(now())
+  completedAt DateTime?
+  error       String?
+
+  @@index([status])
+  @@index([createdBy])
+  @@map("export_jobs")
+}
+
+model ActivityTimeline {
+  id          String   @id @default(uuid())
+  activityId  String
+  step        Int
+  action      String
+  details     Json?
+  timestamp   DateTime @default(now())
+
+  @@index([activityId])
+  @@index([timestamp])
+  @@map("activity_timeline")
+}
+
+enum ExportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }
