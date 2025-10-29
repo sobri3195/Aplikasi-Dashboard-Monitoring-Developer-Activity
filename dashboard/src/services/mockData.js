@@ -249,8 +249,11 @@ export const mockRepositories = [
     id: 1,
     name: 'project-alpha',
     path: '/repos/project-alpha',
+    gitlabUrl: 'https://gitlab.com/demo/project-alpha',
     isEncrypted: true,
+    securityStatus: 'SECURE',
     lastAccessed: new Date().toISOString(),
+    lastActivity: new Date().toISOString(),
     user: { email: 'admin@devmonitor.com' },
     createdAt: new Date(Date.now() - 86400000 * 60).toISOString()
   },
@@ -258,8 +261,11 @@ export const mockRepositories = [
     id: 2,
     name: 'project-beta',
     path: '/repos/project-beta',
+    gitlabUrl: 'https://gitlab.com/demo/project-beta',
     isEncrypted: true,
+    securityStatus: 'SECURE',
     lastAccessed: new Date(Date.now() - 3600000).toISOString(),
+    lastActivity: new Date(Date.now() - 3600000).toISOString(),
     user: { email: 'developer@devmonitor.com' },
     createdAt: new Date(Date.now() - 86400000 * 45).toISOString()
   },
@@ -267,8 +273,11 @@ export const mockRepositories = [
     id: 3,
     name: 'frontend-app',
     path: '/repos/frontend-app',
+    gitlabUrl: 'https://gitlab.com/demo/frontend-app',
     isEncrypted: true,
+    securityStatus: 'SECURE',
     lastAccessed: new Date(Date.now() - 7200000).toISOString(),
+    lastActivity: new Date(Date.now() - 7200000).toISOString(),
     user: { email: 'jane.smith@example.com' },
     createdAt: new Date(Date.now() - 86400000 * 30).toISOString()
   },
@@ -276,8 +285,11 @@ export const mockRepositories = [
     id: 4,
     name: 'backend-api',
     path: '/repos/backend-api',
+    gitlabUrl: 'https://gitlab.com/demo/backend-api',
     isEncrypted: true,
+    securityStatus: 'WARNING',
     lastAccessed: new Date(Date.now() - 10800000).toISOString(),
+    lastActivity: new Date(Date.now() - 10800000).toISOString(),
     user: { email: 'alex.johnson@example.com' },
     createdAt: new Date(Date.now() - 86400000 * 25).toISOString()
   },
@@ -285,8 +297,11 @@ export const mockRepositories = [
     id: 5,
     name: 'secret-project',
     path: '/repos/secret-project',
+    gitlabUrl: 'https://gitlab.com/demo/secret-project',
     isEncrypted: false,
+    securityStatus: 'COMPROMISED',
     lastAccessed: new Date(Date.now() - 14400000).toISOString(),
+    lastActivity: new Date(Date.now() - 14400000).toISOString(),
     user: { email: 'john.doe@example.com' },
     createdAt: new Date(Date.now() - 86400000 * 20).toISOString()
   }
@@ -342,25 +357,124 @@ export const mockSecuritySettings = {
   maxFailedAttempts: 3
 };
 
+export const isOfflineMode = () => {
+  return true;
+};
+
 export const isDemoMode = () => {
   const token = localStorage.getItem('token');
   return token && token.startsWith('demo-token-');
 };
 
 export const getMockResponse = (endpoint, method = 'GET', data = null) => {
-  if (!isDemoMode()) {
+  let localStorageService;
+  try {
+    localStorageService = require('./localStorageService').default;
+  } catch (e) {
+    console.error('LocalStorageService not available:', e);
     return null;
   }
 
   const responses = {
-    '/api/dashboard/overview': { data: mockDashboardData },
-    '/api/users': { data: mockUsers },
-    '/api/devices': { data: mockDevices },
-    '/api/activities': { data: mockActivities },
-    '/api/repositories': { data: mockRepositories },
-    '/api/alerts': { data: mockAlerts },
-    '/api/security/settings': { data: mockSecuritySettings }
+    '/api/dashboard/overview': () => ({ data: localStorageService.getDashboard() }),
+    '/api/users': () => ({ data: localStorageService.getUsers() }),
+    '/api/devices': () => ({ data: localStorageService.getDevices() }),
+    '/api/activities': () => ({ data: localStorageService.getActivities() }),
+    '/api/repositories': () => ({ data: localStorageService.getRepositories() }),
+    '/api/repositories/stats': () => ({ data: localStorageService.getRepositoryStats() }),
+    '/api/alerts': () => ({ data: localStorageService.getAlerts() }),
+    '/api/security/settings': () => ({ data: localStorageService.getSecuritySettings() })
   };
 
-  return responses[endpoint] || { data: {} };
+  if (method === 'POST') {
+    if (endpoint === '/api/repositories') {
+      const newRepo = localStorageService.addRepository(data);
+      return { data: newRepo, success: true };
+    }
+    if (endpoint === '/api/users') {
+      const newUser = localStorageService.addUser(data);
+      return { data: newUser, success: true };
+    }
+    if (endpoint === '/api/devices') {
+      const newDevice = localStorageService.addDevice(data);
+      return { data: newDevice, success: true };
+    }
+    if (endpoint === '/api/activities') {
+      const newActivity = localStorageService.addActivity(data);
+      return { data: newActivity, success: true };
+    }
+    if (endpoint === '/api/alerts') {
+      const newAlert = localStorageService.addAlert(data);
+      return { data: newAlert, success: true };
+    }
+  }
+
+  if (method === 'PUT') {
+    const idMatch = endpoint.match(/\/api\/repositories\/(\d+)/);
+    if (idMatch) {
+      const id = parseInt(idMatch[1]);
+      if (endpoint.includes('/decrypt')) {
+        const updated = localStorageService.updateRepository(id, { isEncrypted: false });
+        return { data: updated, success: true };
+      }
+      const updated = localStorageService.updateRepository(id, data);
+      return { data: updated, success: true };
+    }
+
+    if (endpoint.match(/\/api\/devices\/(\d+)/)) {
+      const id = parseInt(endpoint.match(/\/api\/devices\/(\d+)/)[1]);
+      const updated = localStorageService.updateDevice(id, data);
+      return { data: updated, success: true };
+    }
+
+    if (endpoint.match(/\/api\/users\/(\d+)/)) {
+      const id = parseInt(endpoint.match(/\/api\/users\/(\d+)/)[1]);
+      const updated = localStorageService.updateUser(id, data);
+      return { data: updated, success: true };
+    }
+
+    if (endpoint.match(/\/api\/alerts\/(\d+)/)) {
+      const id = parseInt(endpoint.match(/\/api\/alerts\/(\d+)/)[1]);
+      const updated = localStorageService.updateAlert(id, data);
+      return { data: updated, success: true };
+    }
+
+    if (endpoint === '/api/security/settings') {
+      const updated = localStorageService.updateSecuritySettings(data);
+      return { data: updated, success: true };
+    }
+  }
+
+  if (method === 'DELETE') {
+    const repoMatch = endpoint.match(/\/api\/repositories\/(\d+)/);
+    if (repoMatch) {
+      const id = parseInt(repoMatch[1]);
+      localStorageService.deleteRepository(id);
+      return { success: true };
+    }
+
+    const deviceMatch = endpoint.match(/\/api\/devices\/(\d+)/);
+    if (deviceMatch) {
+      const id = parseInt(deviceMatch[1]);
+      localStorageService.deleteDevice(id);
+      return { success: true };
+    }
+
+    const userMatch = endpoint.match(/\/api\/users\/(\d+)/);
+    if (userMatch) {
+      const id = parseInt(userMatch[1]);
+      localStorageService.deleteUser(id);
+      return { success: true };
+    }
+
+    const alertMatch = endpoint.match(/\/api\/alerts\/(\d+)/);
+    if (alertMatch) {
+      const id = parseInt(alertMatch[1]);
+      localStorageService.deleteAlert(id);
+      return { success: true };
+    }
+  }
+
+  const handler = responses[endpoint];
+  return handler ? handler() : { data: {} };
 };
