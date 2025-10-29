@@ -12,9 +12,17 @@ A comprehensive system for monitoring developer activities, managing authorized 
 - 🔔 Slack notifications
 - 🌐 GitLab webhook integration
 - 💾 **Offline Mode with LocalStorage** - Fully functional without backend
+- 🛡️ **NEW! Access Detection & Protection** - Real-time monitoring and auto-encryption for unauthorized access
 
 > 📖 **NEW! Offline Mode Documentation:**
 > - [LOCALSTORAGE_OFFLINE_MODE.md](LOCALSTORAGE_OFFLINE_MODE.md) - Complete offline mode guide with repository input management
+
+> 🚨 **NEW! Access Detection & Protection:**
+> - [ACCESS_DETECTION_PROTECTION.md](ACCESS_DETECTION_PROTECTION.md) - Complete access detection and protection guide
+> - Real-time monitoring of clone, pull, and push operations
+> - Automatic encryption when unauthorized access detected
+> - Alerts to Slack and dashboard in real-time
+> - Skip encryption for authorized transfers through official channels
 
 ### Core Monitoring Features
 

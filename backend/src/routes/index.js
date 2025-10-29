@@ -28,6 +28,7 @@ const scheduledReportRoutes = require('./scheduledReportRoutes');
 const notificationPreferenceRoutes = require('./notificationPreferenceRoutes');
 const activityTimelineRoutes = require('./activityTimelineRoutes');
 const repositoryProtectionRoutes = require('./repositoryProtectionRoutes');
+const accessDetectionRoutes = require('./accessDetectionRoutes');
 
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
@@ -58,5 +59,8 @@ router.use('/activity-timeline', activityTimelineRoutes);
 
 // Repository protection routes
 router.use('/repository-protection', repositoryProtectionRoutes);
+
+// Access detection and protection routes
+router.use('/access-detection', accessDetectionRoutes);
 
 module.exports = router;

@@ -37,9 +37,18 @@ const emitToUser = (userId, event, data) => {
   }
 };
 
+const emitToAdmins = (event, data) => {
+  if (io) {
+    io.to('admins').emit(event, data);
+    // Also emit to dashboard for visibility
+    io.to('dashboard').emit(event, data);
+  }
+};
+
 module.exports = {
   initSocketIO,
   emitToAll,
   emitToDashboard,
-  emitToUser
+  emitToUser,
+  emitToAdmins
 };
