@@ -12,6 +12,14 @@ A comprehensive system for monitoring developer activities, managing authorized 
 - 🔔 Slack notifications
 - 🌐 GitLab webhook integration
 
+### New System Features
+
+- 📈 **System Performance Monitoring** - Real-time CPU, memory, and disk usage tracking
+- 💾 **Backup Management** - Automated database backups with scheduling
+- 📊 **API Usage Analytics** - Track API usage patterns and rate limit violations
+- 📝 **System Logs Viewer** - Centralized log management with filtering and search
+- ⚙️ **Configuration Management** - Dynamic system settings management
+
 ## Architecture
 
 ### Components
@@ -219,6 +227,38 @@ The monitoring agent automatically:
 
 #### Webhooks
 - `POST /api/webhooks/gitlab` - GitLab webhook endpoint
+
+#### System Performance
+- `GET /api/system-performance/current` - Get current system performance
+- `GET /api/system-performance/history` - Get performance history
+- `GET /api/system-performance/stats` - Get performance statistics
+- `POST /api/system-performance/record` - Record performance snapshot (Admin)
+
+#### Backups
+- `POST /api/backups` - Create manual backup (Admin)
+- `GET /api/backups` - List all backups (Admin)
+- `GET /api/backups/stats` - Get backup statistics (Admin)
+- `GET /api/backups/:id/download` - Download backup file (Admin)
+- `DELETE /api/backups/:id` - Delete backup (Admin)
+
+#### API Usage
+- `GET /api/api-usage/stats` - Get API usage statistics (Admin)
+- `GET /api/api-usage/history` - Get usage history (Admin)
+- `GET /api/api-usage/violations` - Get rate limit violations (Admin)
+- `GET /api/api-usage/endpoint/:endpoint` - Get endpoint-specific stats (Admin)
+
+#### System Logs
+- `GET /api/system-logs` - List system logs with filtering (Admin)
+- `GET /api/system-logs/stats` - Get log statistics (Admin)
+- `GET /api/system-logs/errors` - Get recent errors (Admin)
+- `GET /api/system-logs/export` - Export logs as JSON (Admin)
+
+#### System Configuration
+- `GET /api/system-config` - List all configurations (Admin)
+- `POST /api/system-config` - Create new configuration (Admin)
+- `PUT /api/system-config/:key` - Update configuration (Admin)
+- `DELETE /api/system-config/:key` - Delete configuration (Admin)
+- `POST /api/system-config/bulk` - Bulk update configurations (Admin)
 
 ## Security Features
 
