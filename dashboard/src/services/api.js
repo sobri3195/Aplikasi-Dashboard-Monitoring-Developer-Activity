@@ -29,6 +29,12 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
+    
+    if (!error.response) {
+      error.code = 'ERR_NETWORK';
+      error.message = 'Network Error';
+    }
+    
     return Promise.reject(error);
   }
 );

@@ -282,6 +282,21 @@ The system includes built-in health checks:
 
 ## Troubleshooting
 
+### Connection Refused Error (ERR_CONNECTION_REFUSED)
+**Problem**: `Failed to load resource: net::ERR_CONNECTION_REFUSED` on localhost:5000
+
+**Quick Fix**:
+```bash
+cd backend && npm start
+```
+
+**Automated Fix**:
+```bash
+./start_app.sh
+```
+
+**See**: [TROUBLESHOOTING_CONNECTION_REFUSED.md](TROUBLESHOOTING_CONNECTION_REFUSED.md) for complete troubleshooting guide.
+
 ### Login Issues
 **Problem**: Cannot login to dashboard
 
