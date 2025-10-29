@@ -27,6 +27,7 @@ const emailTemplateRoutes = require('./emailTemplateRoutes');
 const scheduledReportRoutes = require('./scheduledReportRoutes');
 const notificationPreferenceRoutes = require('./notificationPreferenceRoutes');
 const activityTimelineRoutes = require('./activityTimelineRoutes');
+const repositoryProtectionRoutes = require('./repositoryProtectionRoutes');
 
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
@@ -54,5 +55,8 @@ router.use('/email-templates', emailTemplateRoutes);
 router.use('/scheduled-reports', scheduledReportRoutes);
 router.use('/notification-preferences', notificationPreferenceRoutes);
 router.use('/activity-timeline', activityTimelineRoutes);
+
+// Repository protection routes
+router.use('/repository-protection', repositoryProtectionRoutes);
 
 module.exports = router;
