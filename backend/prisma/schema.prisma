@@ -48,7 +48,7 @@ model Device {
 model Activity {
   id          String         @id @default(uuid())
   userId      String
-  deviceId    String
+  deviceId    String?
   activityType ActivityType
   repository  String?
   branch      String?
@@ -61,8 +61,8 @@ model Activity {
   timestamp   DateTime      @default(now())
   createdAt   DateTime      @default(now())
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   alerts Alert[]
 
   @@index([userId])
