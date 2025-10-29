@@ -30,6 +30,11 @@ export const SocketProvider = ({ children }) => {
       setConnected(false);
     });
 
+    newSocket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      setConnected(false);
+    });
+
     newSocket.on('new-activity', (data) => {
       console.log('New activity:', data);
       if (data.isSuspicious) {

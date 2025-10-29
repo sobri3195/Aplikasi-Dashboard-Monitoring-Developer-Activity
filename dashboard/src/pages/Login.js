@@ -39,11 +39,18 @@ const Login = () => {
       navigate('/');
     } catch (error) {
       console.error('Login error:', error);
-      const errorMessage = error.response?.data?.error 
-        || error.response?.data?.message 
-        || error.message 
-        || 'Login failed. Please check your credentials.';
-      toast.error(errorMessage);
+      let errorMessage;
+      
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        errorMessage = 'Cannot connect to backend server. Please ensure the backend is running on http://localhost:5000';
+      } else {
+        errorMessage = error.response?.data?.error 
+          || error.response?.data?.message 
+          || error.message 
+          || 'Login failed. Please check your credentials.';
+      }
+      
+      toast.error(errorMessage, { duration: 6000 });
     } finally {
       setLoading(false);
     }
@@ -57,11 +64,18 @@ const Login = () => {
       navigate('/');
     } catch (error) {
       console.error('Demo login error:', error);
-      const errorMessage = error.response?.data?.error 
-        || error.response?.data?.message 
-        || error.message 
-        || 'Login failed. Please ensure backend is running.';
-      toast.error(errorMessage);
+      let errorMessage;
+      
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        errorMessage = 'Cannot connect to backend server. Please ensure the backend is running on http://localhost:5000';
+      } else {
+        errorMessage = error.response?.data?.error 
+          || error.response?.data?.message 
+          || error.message 
+          || 'Login failed. Please ensure backend is running.';
+      }
+      
+      toast.error(errorMessage, { duration: 6000 });
     } finally {
       setLoading(false);
     }
@@ -165,6 +179,19 @@ const Login = () => {
               💡 Demo accounts bypass password verification for easy testing
             </p>
           </div>
+        </div>
+
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+          <h3 className="text-sm font-semibold text-yellow-900 mb-2">⚠️ Backend Required</h3>
+          <p className="text-xs text-yellow-700 mb-2">
+            Make sure the backend server is running before logging in.
+          </p>
+          <div className="bg-yellow-100 p-2 rounded text-xs font-mono text-yellow-900 mt-2">
+            cd backend && npm start
+          </div>
+          <p className="text-xs text-yellow-600 mt-2">
+            Backend should be running on <strong>http://localhost:5000</strong>
+          </p>
         </div>
       </div>
     </div>
