@@ -32,12 +32,32 @@ A comprehensive system for monitoring developer activities, managing authorized 
 
 ## Quick Start
 
+> **🚀 Untuk langkah cepat dalam Bahasa Indonesia, lihat [QUICK_START.md](QUICK_START.md)**
+> 
+> **🔧 Jika login tidak berfungsi, lihat [PERBAIKAN_LOGIN.md](PERBAIKAN_LOGIN.md)**
+
 ### Prerequisites
 
 - Node.js 18+
 - Python 3.8+
 - PostgreSQL 14+
 - Docker & Docker Compose (optional)
+
+### Fast Setup (Recommended)
+
+```bash
+# Run automated setup script
+./setup_and_test.sh
+
+# Start backend
+cd backend && npm start
+
+# In another terminal, start dashboard
+cd dashboard && npm start
+
+# Test login
+./test_login_all.sh
+```
 
 ### Installation
 
@@ -262,6 +282,18 @@ The system includes built-in health checks:
 
 ## Troubleshooting
 
+### Login Issues
+**Problem**: Cannot login to dashboard
+
+**Solutions**:
+1. Run the setup script: `./setup_and_test.sh`
+2. Ensure database is seeded: `cd backend && npm run db:seed`
+3. Check Prisma client is generated: `cd backend && npx prisma generate`
+4. Verify backend is running: `curl http://localhost:5000/health`
+5. See detailed guide: [PERBAIKAN_LOGIN.md](PERBAIKAN_LOGIN.md)
+
+**Demo Account Bypass**: All demo accounts (admin@devmonitor.com, developer@devmonitor.com, etc.) bypass password verification for easy testing.
+
 ### Agent Connection Issues
 - Verify API URL in agent configuration
 - Check network connectivity
@@ -270,7 +302,8 @@ The system includes built-in health checks:
 ### Database Issues
 - Check PostgreSQL is running
 - Verify DATABASE_URL in .env
-- Run migrations
+- Run migrations: `cd backend && npx prisma migrate deploy`
+- Seed database: `cd backend && npm run db:seed`
 
 ### Real-time Updates Not Working
 - Check Socket.IO connection in browser console

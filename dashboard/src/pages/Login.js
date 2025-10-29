@@ -38,7 +38,12 @@ const Login = () => {
       toast.success('Login successful!');
       navigate('/');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Login failed');
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.error 
+        || error.response?.data?.message 
+        || error.message 
+        || 'Login failed. Please check your credentials.';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -51,7 +56,12 @@ const Login = () => {
       toast.success('Demo login successful!');
       navigate('/');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Login failed');
+      console.error('Demo login error:', error);
+      const errorMessage = error.response?.data?.error 
+        || error.response?.data?.message 
+        || error.message 
+        || 'Login failed. Please ensure backend is running.';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
