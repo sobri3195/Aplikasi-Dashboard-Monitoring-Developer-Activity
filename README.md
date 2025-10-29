@@ -61,6 +61,35 @@ A comprehensive system for monitoring developer activities, managing authorized 
 - **Dashboard UI**: React.js 18+, Tailwind CSS, Socket.IO Client
 - **Integrations**: GitLab Webhook API, Slack Incoming Webhook
 
+## ⚠️ Device Verification Required
+
+**IMPORTANT:** Every developer MUST register their device before accessing this repository.
+
+When you clone this repository, you must:
+1. Run the setup script: `./setup_repo_protection.sh`
+2. Register your device with the system
+3. Wait for administrator approval
+4. Only then can you commit/push to the repository
+
+> 📖 **Device Verification Documentation:**
+> - [DEVICE_VERIFICATION_ON_CLONE.md](DEVICE_VERIFICATION_ON_CLONE.md) - Complete device verification guide (English)
+> - [VALIDASI_DEVICE_DEVELOPER.md](VALIDASI_DEVICE_DEVELOPER.md) - Panduan validasi device (Bahasa Indonesia)
+
+### Quick Setup After Clone
+
+```bash
+# 1. Clone repository
+git clone <repository-url>
+cd dashboard-monitoring-dev-activity
+
+# 2. Run device protection setup
+./setup_repo_protection.sh
+
+# 3. Follow the prompts to register your device
+# 4. Wait for administrator approval
+# 5. Start working after approval
+```
+
 ## Quick Start
 
 > **🚀 Untuk langkah cepat dalam Bahasa Indonesia, lihat [QUICK_START.md](QUICK_START.md)**

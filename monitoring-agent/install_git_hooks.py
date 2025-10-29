@@ -74,12 +74,21 @@ REPO_ID="${REPO_ID}"
 if [ ! -f "monitoring-agent/copy_detection_monitor.py" ]; then
     echo "⚠️  Warning: Monitoring agent not found"
     echo "   Repository protection may not be active."
+    echo ""
+    echo "   Please run: ./setup_repo_protection.sh"
     exit 0
 fi
 
 # If this is a new clone (no previous HEAD), perform initial device verification
 if [ "$1" = "0000000000000000000000000000000000000000" ]; then
-    echo "🔍 New repository clone detected - verifying device registration..."
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🔐 DEVICE VERIFICATION REQUIRED"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "This repository requires device registration before access."
+    echo "Checking your device registration status..."
+    echo ""
     
     # Run device verification
     python3 monitoring-agent/repo_protection_agent.py verify \\
@@ -88,23 +97,56 @@ if [ "$1" = "0000000000000000000000000000000000000000" ]; then
         --repo-id "$REPO_ID" \\
         --repo-path "."
     
-    if [ $? -ne 0 ]; then
+    VERIFY_STATUS=$?
+    
+    if [ $VERIFY_STATUS -ne 0 ]; then
         echo ""
-        echo "❌ Device not registered or not approved!"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "❌ DEVICE NOT REGISTERED OR NOT APPROVED"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo ""
-        echo "   This repository requires device registration."
-        echo "   Please register your device:"
+        echo "⚠️  This repository is protected with device verification."
+        echo "    Your device is not registered or not approved yet."
         echo ""
-        echo "   python3 monitoring-agent/repo_protection_agent.py register --device-name \\"My Device\\""
+        echo "📋 What you need to do:"
         echo ""
-        echo "   Then wait for administrator approval."
+        echo "   1. Run the setup script:"
+        echo "      ./setup_repo_protection.sh"
+        echo ""
+        echo "   2. Or manually register your device:"
+        echo "      python3 monitoring-agent/repo_protection_agent.py register \\\\"
+        echo "        --device-name \\"My Laptop\\" \\\\"
+        echo "        --api-url \\"$API_URL\\" \\\\"
+        echo "        --token \\"$API_TOKEN\\""
+        echo ""
+        echo "   3. Wait for administrator approval"
+        echo ""
+        echo "   4. Check status:"
+        echo "      python3 monitoring-agent/repo_protection_agent.py verify \\\\"
+        echo "        --repo-id \\"$REPO_ID\\" --repo-path \\".\\""
+        echo ""
+        echo "📖 Documentation:"
+        echo "   - DEVICE_VERIFICATION_ON_CLONE.md"
+        echo "   - VALIDASI_DEVICE_DEVELOPER.md (Indonesian)"
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
         exit 1
     fi
     
-    echo "✅ Device verified successfully"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "✅ DEVICE VERIFIED SUCCESSFULLY"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "   Your device is registered and approved."
+    echo "   You can now work with this repository."
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
 fi
 
-# Check if repository was moved/copied
+# Check if repository was moved/copied (for all checkouts)
 python3 monitoring-agent/copy_detection_monitor.py \\
     --api-url "$API_URL" \\
     --token "$API_TOKEN" \\
@@ -112,8 +154,18 @@ python3 monitoring-agent/copy_detection_monitor.py \\
     --repo-path "."
 
 if [ $? -ne 0 ]; then
-    echo "❌ Repository location verification failed!"
-    echo "   This repository may have been copied to an unauthorized location."
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "⚠️  REPOSITORY LOCATION VERIFICATION FAILED"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "This repository may have been copied to an unauthorized location."
+    echo "Please use the repository from its original location."
+    echo ""
+    echo "Contact your administrator if you need assistance."
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
     exit 1
 fi
 
@@ -125,6 +177,11 @@ PRE_COMMIT_HOOK = '''#!/bin/bash
 
 echo "🔍 Verifying repository access..."
 
+# Get configuration from environment or .env file
+if [ -f ".env" ]; then
+    source .env
+fi
+
 # Verify device and repository
 python3 monitoring-agent/repo_protection_agent.py verify \\
     --api-url "${API_URL:-http://localhost:5000}" \\
@@ -133,20 +190,47 @@ python3 monitoring-agent/repo_protection_agent.py verify \\
     --repo-path "."
 
 if [ $? -ne 0 ]; then
-    echo "❌ Repository access verification failed!"
-    echo "   Cannot commit to this repository."
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ REPOSITORY ACCESS VERIFICATION FAILED"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "⚠️  Your device is not authorized to commit to this repository."
+    echo ""
+    echo "Possible reasons:"
+    echo "  • Device not registered"
+    echo "  • Device status is PENDING (waiting for approval)"
+    echo "  • Device status is REJECTED or REVOKED"
+    echo "  • Repository has been moved/copied"
+    echo ""
+    echo "📋 What to do:"
+    echo "  1. Check device status with administrator"
+    echo "  2. Ensure device is approved in the dashboard"
+    echo "  3. Verify you are in the original repository location"
+    echo ""
+    echo "📖 See: DEVICE_VERIFICATION_ON_CLONE.md for help"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
     exit 1
 fi
 
+echo "✅ Device verified - commit allowed"
 exit 0
 '''
 
 PRE_PUSH_HOOK = '''#!/bin/bash
 # Pre-push hook - Verify device and repository integrity
 
-echo "🔍 Verifying repository integrity..."
+echo "🔍 Verifying repository integrity before push..."
+
+# Get configuration from environment or .env file
+if [ -f ".env" ]; then
+    source .env
+fi
 
 # Check repository location
+echo "   → Checking repository location..."
 python3 monitoring-agent/copy_detection_monitor.py \\
     --api-url "${API_URL:-http://localhost:5000}" \\
     --token "$API_TOKEN" \\
@@ -154,12 +238,30 @@ python3 monitoring-agent/copy_detection_monitor.py \\
     --repo-path "."
 
 if [ $? -ne 0 ]; then
-    echo "❌ Repository integrity check failed!"
-    echo "   Cannot push from unauthorized location."
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ REPOSITORY INTEGRITY CHECK FAILED"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "⚠️  Cannot push from this location."
+    echo ""
+    echo "This repository may have been:"
+    echo "  • Copied to an unauthorized location"
+    echo "  • Moved without approval"
+    echo "  • Accessed from an untrusted path"
+    echo ""
+    echo "📋 Solution:"
+    echo "  1. Use repository from original location"
+    echo "  2. Contact administrator to add trusted path"
+    echo "  3. Do not copy repository to USB or external drives"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
     exit 1
 fi
 
 # Verify device access
+echo "   → Verifying device authorization..."
 python3 monitoring-agent/repo_protection_agent.py verify \\
     --api-url "${API_URL:-http://localhost:5000}" \\
     --token "$API_TOKEN" \\
@@ -167,11 +269,21 @@ python3 monitoring-agent/repo_protection_agent.py verify \\
     --repo-path "."
 
 if [ $? -ne 0 ]; then
-    echo "❌ Device verification failed!"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ DEVICE VERIFICATION FAILED"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "⚠️  Your device is not authorized to push."
+    echo ""
+    echo "Contact your administrator to verify device status."
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
     exit 1
 fi
 
-echo "✅ Repository verified"
+echo "✅ All checks passed - push allowed"
 exit 0
 '''
 
