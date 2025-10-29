@@ -14,6 +14,10 @@ import {
   XMarkIcon,
   ArrowRightOnRectangleIcon,
   ChartBarIcon,
+  PresentationChartLineIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  ShieldExclamationIcon,
 } from '@heroicons/react/24/outline';
 
 const Layout = () => {
@@ -32,6 +36,10 @@ const Layout = () => {
     { name: 'Security', href: '/security', icon: ShieldCheckIcon },
     { name: 'Repositories', href: '/repositories', icon: FolderIcon },
     { name: 'Users', href: '/users', icon: UserGroupIcon, adminOnly: true },
+    { name: 'Developer Stats', href: '/developer-stats', icon: PresentationChartLineIcon },
+    { name: 'Security Logs', href: '/security-logs', icon: DocumentTextIcon, adminOnly: true },
+    { name: 'Behavioral Analytics', href: '/behavioral-analytics', icon: ExclamationTriangleIcon, adminOnly: true },
+    { name: 'Device Verification', href: '/device-verification', icon: ShieldExclamationIcon, adminOnly: true },
   ];
 
   const handleLogout = () => {

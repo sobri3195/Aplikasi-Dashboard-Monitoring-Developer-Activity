@@ -15,6 +15,10 @@ import Alerts from './pages/Alerts';
 import Security from './pages/Security';
 import Repositories from './pages/Repositories';
 import Users from './pages/Users';
+import DeveloperStats from './pages/DeveloperStats';
+import SecurityLogs from './pages/SecurityLogs';
+import BehavioralAnalytics from './pages/BehavioralAnalytics';
+import DeviceVerification from './pages/DeviceVerification';
 
 function App() {
   return (
@@ -53,6 +57,10 @@ function App() {
               <Route path="security" element={<Security />} />
               <Route path="repositories" element={<Repositories />} />
               <Route path="users" element={<Users />} />
+              <Route path="developer-stats" element={<DeveloperStats />} />
+              <Route path="security-logs" element={<SecurityLogs />} />
+              <Route path="behavioral-analytics" element={<BehavioralAnalytics />} />
+              <Route path="device-verification" element={<DeviceVerification />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
