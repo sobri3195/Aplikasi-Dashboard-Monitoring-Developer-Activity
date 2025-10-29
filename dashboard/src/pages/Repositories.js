@@ -6,12 +6,25 @@ import {
   ShieldCheckIcon,
   LockClosedIcon,
   ExclamationTriangleIcon,
+  PlusIcon,
+  XMarkIcon,
+  TrashIcon,
+  PencilIcon,
 } from '@heroicons/react/24/outline';
 
 const Repositories = () => {
   const [repositories, setRepositories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingRepo, setEditingRepo] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    path: '',
+    gitlabUrl: '',
+    isEncrypted: false,
+    securityStatus: 'SECURE'
+  });
 
   useEffect(() => {
     fetchRepositories();
@@ -55,6 +68,80 @@ const Repositories = () => {
     }
   };
 
+  const handleAddRepository = () => {
+    setEditingRepo(null);
+    setFormData({
+      name: '',
+      path: '',
+      gitlabUrl: '',
+      isEncrypted: false,
+      securityStatus: 'SECURE'
+    });
+    setShowAddModal(true);
+  };
+
+  const handleEditRepository = (repo) => {
+    setEditingRepo(repo);
+    setFormData({
+      name: repo.name,
+      path: repo.path || '',
+      gitlabUrl: repo.gitlabUrl || '',
+      isEncrypted: repo.isEncrypted,
+      securityStatus: repo.securityStatus
+    });
+    setShowAddModal(true);
+  };
+
+  const handleDeleteRepository = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this repository?')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/api/repositories/${id}`);
+      toast.success('Repository deleted successfully');
+      fetchRepositories();
+      fetchStats();
+    } catch (error) {
+      toast.error('Failed to delete repository');
+      console.error(error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.name) {
+      toast.error('Repository name is required');
+      return;
+    }
+
+    try {
+      if (editingRepo) {
+        await api.put(`/api/repositories/${editingRepo.id}`, formData);
+        toast.success('Repository updated successfully');
+      } else {
+        await api.post('/api/repositories', formData);
+        toast.success('Repository added successfully');
+      }
+      
+      setShowAddModal(false);
+      fetchRepositories();
+      fetchStats();
+    } catch (error) {
+      toast.error(editingRepo ? 'Failed to update repository' : 'Failed to add repository');
+      console.error(error);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
   const getSecurityStatusColor = (status) => {
     const colors = {
       SECURE: 'bg-green-100 text-green-800',
@@ -90,11 +177,20 @@ const Repositories = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Repositories</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Monitor and manage repository security status
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Repositories</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Monitor and manage repository security status
+          </p>
+        </div>
+        <button
+          onClick={handleAddRepository}
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        >
+          <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
+          Add Repository
+        </button>
       </div>
 
       {stats && (
@@ -200,14 +296,26 @@ const Repositories = () => {
                       : 'Never'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => handleEditRepository(repo)}
+                      className="text-indigo-600 hover:text-indigo-900 mr-3"
+                    >
+                      <PencilIcon className="w-4 h-4 inline" />
+                    </button>
                     {repo.isEncrypted && (
                       <button
                         onClick={() => handleDecrypt(repo.id)}
-                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                        className="text-blue-600 hover:text-blue-900 mr-3"
                       >
                         Decrypt
                       </button>
                     )}
+                    <button
+                      onClick={() => handleDeleteRepository(repo.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <TrashIcon className="w-4 h-4 inline" />
+                    </button>
                   </td>
                 </tr>
               ))
@@ -215,6 +323,131 @@ const Repositories = () => {
           </tbody>
         </table>
       </div>
+
+      {showAddModal && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowAddModal(false)}></div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <form onSubmit={handleSubmit}>
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {editingRepo ? 'Edit Repository' : 'Add New Repository'}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(false)}
+                      className="text-gray-400 hover:text-gray-500"
+                    >
+                      <XMarkIcon className="h-6 w-6" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                        Repository Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        id="name"
+                        required
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        placeholder="e.g., my-project"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="path" className="block text-sm font-medium text-gray-700">
+                        Repository Path
+                      </label>
+                      <input
+                        type="text"
+                        name="path"
+                        id="path"
+                        value={formData.path}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        placeholder="e.g., /repos/my-project"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="gitlabUrl" className="block text-sm font-medium text-gray-700">
+                        GitLab URL
+                      </label>
+                      <input
+                        type="text"
+                        name="gitlabUrl"
+                        id="gitlabUrl"
+                        value={formData.gitlabUrl}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        placeholder="e.g., https://gitlab.com/user/repo"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="securityStatus" className="block text-sm font-medium text-gray-700">
+                        Security Status
+                      </label>
+                      <select
+                        name="securityStatus"
+                        id="securityStatus"
+                        value={formData.securityStatus}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                      >
+                        <option value="SECURE">Secure</option>
+                        <option value="WARNING">Warning</option>
+                        <option value="COMPROMISED">Compromised</option>
+                        <option value="ENCRYPTED">Encrypted</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="isEncrypted"
+                        id="isEncrypted"
+                        checked={formData.isEncrypted}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="isEncrypted" className="ml-2 block text-sm text-gray-900">
+                        Enable Encryption
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                  <button
+                    type="submit"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    {editingRepo ? 'Update' : 'Add'} Repository
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -11,6 +11,10 @@ A comprehensive system for monitoring developer activities, managing authorized 
 - 📊 Interactive dashboard with security indicators
 - 🔔 Slack notifications
 - 🌐 GitLab webhook integration
+- 💾 **Offline Mode with LocalStorage** - Fully functional without backend
+
+> 📖 **NEW! Offline Mode Documentation:**
+> - [LOCALSTORAGE_OFFLINE_MODE.md](LOCALSTORAGE_OFFLINE_MODE.md) - Complete offline mode guide with repository input management
 
 ### Core Monitoring Features
 

@@ -17,20 +17,18 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    if (isDemoMode()) {
-      const mockResponse = getMockResponse(config.url, config.method, config.data);
-      if (mockResponse) {
-        config.adapter = () => {
-          return Promise.resolve({
-            data: mockResponse,
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: config,
-            request: {}
-          });
-        };
-      }
+    const mockResponse = getMockResponse(config.url, config.method, config.data);
+    if (mockResponse) {
+      config.adapter = () => {
+        return Promise.resolve({
+          data: mockResponse,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: config,
+          request: {}
+        });
+      };
     }
 
     return config;
