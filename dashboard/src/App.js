@@ -8,6 +8,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Monitoring from './pages/Monitoring';
 import Devices from './pages/Devices';
 import Activities from './pages/Activities';
 import Alerts from './pages/Alerts';
@@ -45,6 +46,7 @@ function App() {
               }
             >
               <Route index element={<Dashboard />} />
+              <Route path="monitoring" element={<Monitoring />} />
               <Route path="devices" element={<Devices />} />
               <Route path="activities" element={<Activities />} />
               <Route path="alerts" element={<Alerts />} />

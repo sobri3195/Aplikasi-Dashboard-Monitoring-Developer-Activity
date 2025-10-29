@@ -6,5 +6,6 @@ const { protect } = require('../middleware/auth');
 router.get('/overview', protect, dashboardController.getDashboardOverview);
 router.get('/security', protect, dashboardController.getSecurityDashboard);
 router.get('/activity', protect, dashboardController.getActivityDashboard);
+router.get('/monitoring', protect, dashboardController.getMonitoringDashboard);
 
 module.exports = router;

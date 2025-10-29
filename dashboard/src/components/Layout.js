@@ -13,6 +13,7 @@ import {
   Bars3Icon,
   XMarkIcon,
   ArrowRightOnRectangleIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 const Layout = () => {
@@ -24,6 +25,7 @@ const Layout = () => {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: HomeIcon },
+    { name: 'Monitoring', href: '/monitoring', icon: ChartBarIcon },
     { name: 'Devices', href: '/devices', icon: ComputerDesktopIcon },
     { name: 'Activities', href: '/activities', icon: ClockIcon },
     { name: 'Alerts', href: '/alerts', icon: BellAlertIcon },

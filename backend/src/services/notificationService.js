@@ -109,6 +109,30 @@ class NotificationService {
     }
   }
 
+  async sendTelegramNotification(message, severity = 'info') {
+    if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
+      logger.warn('Telegram notification skipped: not configured');
+      return;
+    }
+
+    try {
+      const emoji = this.getSeverityEmoji(severity);
+      const formattedMessage = `${emoji} *DevMonitor Alert*\n\n${message}`;
+      
+      await axios.post(
+        `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+        {
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: formattedMessage,
+          parse_mode: 'Markdown'
+        }
+      );
+      logger.info('Telegram notification sent successfully');
+    } catch (error) {
+      logger.error('Failed to send Telegram notification:', error.message);
+    }
+  }
+
   async sendWhatsAppNotification(message, phone) {
     if (!process.env.WHATSAPP_ENABLED || process.env.WHATSAPP_ENABLED !== 'true') {
       logger.warn('WhatsApp notification skipped: not configured');
@@ -145,9 +169,11 @@ class NotificationService {
 
   async notifyAll(alert, activity) {
     const message = this.formatAlertMessage(alert, activity);
+    const telegramMessage = this.formatTelegramMessage(alert, activity);
 
     await Promise.all([
       this.sendSlackNotification(message, alert.severity),
+      this.sendTelegramNotification(telegramMessage, alert.severity),
       this.sendDashboardNotification({
         alert,
         activity,
@@ -169,6 +195,31 @@ class NotificationService {
 *Message:* ${message}
 *Time:* ${new Date().toLocaleString()}
     `.trim();
+  }
+
+  formatTelegramMessage(alert, activity) {
+    const { alertType, severity, message } = alert;
+    const { user, device, repository } = activity || {};
+    
+    const deviceInfo = device?.deviceName || device?.fingerprint?.substring(0, 8) || 'Unknown';
+    const emoji = this.getSeverityEmoji(severity);
+    
+    return `${emoji} *${alertType.replace(/_/g, ' ')}*\n\n` +
+      `*User:* ${user?.email || 'Unknown'}\n` +
+      `*Device:* ${deviceInfo}\n` +
+      `*Repository:* ${repository || 'N/A'}\n` +
+      `*Severity:* ${severity}\n\n` +
+      `${message}\n\n` +
+      `_Time: ${new Date().toLocaleString()}_`;
+  }
+
+  getSeverityEmoji(severity) {
+    const emojis = {
+      INFO: 'ℹ️',
+      WARNING: '⚠️',
+      CRITICAL: '🚨'
+    };
+    return emojis[severity] || 'ℹ️';
   }
 
   getSeverityColor(severity) {

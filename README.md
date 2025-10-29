@@ -40,12 +40,27 @@ A comprehensive system for monitoring developer activities, managing authorized 
 - 🌍 **Location-based Monitoring** - Unusual location detection with alerts
 - 🔐 **Automatic Encryption** - Auto-encrypt repos on unauthorized access
 - 📊 **Security Status Indicators** - Real-time repository and device security status
-- 🔔 **Real-time Notifications** - Slack and dashboard alerts for suspicious activities
+- 🔔 **Real-time Notifications** - Slack, Telegram, and dashboard alerts for suspicious activities
 - 🔒 **Device Verification on Clone** - Verify device ID when repository is cloned
 - ⚡ **Real-time Copy Detection** - Immediate alerts and encryption on unauthorized copy
 - 🛡️ **Trusted Paths** - Configure trusted locations for repository access
 
+### 🆕 Monitoring Dashboard (New!)
+
+Real-time monitoring dashboard untuk pantau aktivitas developer:
+
+- **📊 Live Activity Feed**: Real-time git operations (clone, pull, push)
+- **💻 Device Status**: Monitor authorized/unauthorized devices
+- **🔒 Security Indicators**: Repository status (aman, terduga, terenkripsi)
+- **📜 Alert History**: Riwayat alert dan system responses
+- **🔔 Multi-Channel Notifications**: 
+  - Slack integration untuk team alerts
+  - Telegram bot untuk personal notifications
+  - Dashboard real-time notifications via WebSocket
+
 > 📖 **For detailed monitoring features documentation, see:**
+> - [MONITORING_NOTIFICATIONS_GUIDE.md](MONITORING_NOTIFICATIONS_GUIDE.md) - **NEW!** Complete monitoring & notifications guide
+> - [QUICK_SETUP_MONITORING.md](QUICK_SETUP_MONITORING.md) - **NEW!** Quick 5-minute setup guide
 > - [MONITORING_FEATURES.md](MONITORING_FEATURES.md) - Complete feature documentation (English)
 > - [PANDUAN_MONITORING.md](PANDUAN_MONITORING.md) - Panduan lengkap (Bahasa Indonesia)
 > - [DEVICE_VERIFICATION_AND_COPY_PROTECTION.md](DEVICE_VERIFICATION_AND_COPY_PROTECTION.md) - Device verification & copy detection (English)
@@ -232,6 +247,21 @@ REACT_APP_API_URL=http://localhost:5000
 1. Create a Slack app at https://api.slack.com/apps
 2. Enable Incoming Webhooks
 3. Add webhook URL to your `.env` file
+
+### Telegram Bot Integration Setup
+
+1. Open Telegram and search for @BotFather
+2. Send `/newbot` command and follow instructions
+3. Get your Bot Token
+4. Get your Chat ID (use @userinfobot)
+5. Add configuration to your `.env` file:
+   ```env
+   TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+   TELEGRAM_CHAT_ID=your-telegram-chat-id
+   TELEGRAM_ENABLED=true
+   ```
+
+> 📖 **For detailed setup instructions, see [QUICK_SETUP_MONITORING.md](QUICK_SETUP_MONITORING.md)**
 
 ## Usage
 
