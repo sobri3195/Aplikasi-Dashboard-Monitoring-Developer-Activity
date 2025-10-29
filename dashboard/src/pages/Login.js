@@ -13,6 +13,15 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const demoAccounts = [
+    { email: 'admin@devmonitor.com', password: 'admin123456', label: 'Admin Account', role: 'Admin' },
+    { email: 'developer@devmonitor.com', password: 'developer123', label: 'Developer Account', role: 'Developer' },
+    { email: 'viewer@devmonitor.com', password: 'viewer123', label: 'Viewer Account', role: 'Viewer' },
+    { email: 'john.doe@example.com', password: 'john123', label: 'John Doe', role: 'Developer' },
+    { email: 'jane.smith@example.com', password: 'jane123', label: 'Jane Smith', role: 'Developer' },
+    { email: 'alex.johnson@example.com', password: 'alex123', label: 'Alex Johnson', role: 'Admin' },
+  ];
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -27,6 +36,19 @@ const Login = () => {
     try {
       await login(formData.email, formData.password);
       toast.success('Login successful!');
+      navigate('/');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async (email, password) => {
+    setLoading(true);
+    try {
+      await login(email, password);
+      toast.success('Demo login successful!');
       navigate('/');
     } catch (error) {
       toast.error(error.response?.data?.error || 'Login failed');
@@ -106,38 +128,32 @@ const Login = () => {
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-          <h3 className="text-sm font-semibold text-blue-900 mb-2">Demo Accounts</h3>
-          <div className="space-y-2 text-xs text-blue-800">
-            <div className="bg-white p-2 rounded border border-blue-100">
-              <div className="font-medium">Admin Account</div>
-              <div className="text-blue-600">admin@devmonitor.com</div>
-              <div className="text-blue-600">admin123456</div>
-            </div>
-            <div className="bg-white p-2 rounded border border-blue-100">
-              <div className="font-medium">Developer Account</div>
-              <div className="text-blue-600">developer@devmonitor.com</div>
-              <div className="text-blue-600">developer123</div>
-            </div>
-            <div className="bg-white p-2 rounded border border-blue-100">
-              <div className="font-medium">Viewer Account</div>
-              <div className="text-blue-600">viewer@devmonitor.com</div>
-              <div className="text-blue-600">viewer123</div>
-            </div>
-            <div className="bg-white p-2 rounded border border-blue-100">
-              <div className="font-medium">John Doe (Developer)</div>
-              <div className="text-blue-600">john.doe@example.com</div>
-              <div className="text-blue-600">john123</div>
-            </div>
-            <div className="bg-white p-2 rounded border border-blue-100">
-              <div className="font-medium">Jane Smith (Developer)</div>
-              <div className="text-blue-600">jane.smith@example.com</div>
-              <div className="text-blue-600">jane123</div>
-            </div>
-            <div className="bg-white p-2 rounded border border-blue-100">
-              <div className="font-medium">Alex Johnson (Admin)</div>
-              <div className="text-blue-600">alex.johnson@example.com</div>
-              <div className="text-blue-600">alex123</div>
-            </div>
+          <h3 className="text-sm font-semibold text-blue-900 mb-3">Quick Demo Login</h3>
+          <p className="text-xs text-blue-700 mb-3">Click any button below to instantly login as a demo user</p>
+          <div className="space-y-2">
+            {demoAccounts.map((account) => (
+              <button
+                key={account.email}
+                onClick={() => handleDemoLogin(account.email, account.password)}
+                disabled={loading}
+                className="w-full text-left bg-white p-3 rounded border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="font-medium text-blue-900 text-sm">{account.label}</div>
+                    <div className="text-blue-600 text-xs">{account.email}</div>
+                  </div>
+                  <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                    {account.role}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 pt-3 border-t border-blue-200">
+            <p className="text-xs text-blue-700">
+              💡 Demo accounts bypass password verification for easy testing
+            </p>
           </div>
         </div>
       </div>
