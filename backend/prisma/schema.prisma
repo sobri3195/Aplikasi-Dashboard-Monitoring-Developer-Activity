@@ -668,6 +668,8 @@ model AnomalyResponse {
   status          ResponseStatus   @default(PENDING)
   details         Json?
   
+  anomaly         AnomalyDetection @relation(fields: [anomalyId], references: [id], onDelete: Cascade)
+  
   @@index([anomalyId])
   @@index([responseType])
   @@map("anomaly_responses")
