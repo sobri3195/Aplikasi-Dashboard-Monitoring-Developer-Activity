@@ -88,9 +88,34 @@ Real-time monitoring dashboard untuk pantau aktivitas developer:
 
 - **Monitoring Agent**: Python 3.8+, cryptography (AES-256)
 - **Backend API**: Node.js 18+, Express, Socket.IO, Prisma ORM
-- **Database**: PostgreSQL 14+
+- **Database**: PostgreSQL 14+ (Neon Serverless PostgreSQL for production)
 - **Dashboard UI**: React.js 18+, Tailwind CSS, Socket.IO Client
 - **Integrations**: GitLab Webhook API, Slack Incoming Webhook
+- **Deployment**: Netlify (Serverless Functions)
+
+## 🌐 Netlify + Neon Database Setup
+
+This application is configured to deploy on Netlify with Neon PostgreSQL database.
+
+**Database Name**: `crimson-base-54008430`
+
+### Quick Setup for Production:
+
+1. **Get Neon Connection String** from [Neon Console](https://console.neon.tech)
+2. **Configure Environment Variables** in Netlify Dashboard
+3. **Run Database Migrations** using the provided script
+4. **Deploy to Netlify**
+
+> 📖 **Complete Setup Guides:**
+> - [SETUP_NETLIFY_NEON.md](SETUP_NETLIFY_NEON.md) - Quick setup guide (Bilingual)
+> - [NEON_DATABASE_SETUP.md](NEON_DATABASE_SETUP.md) - Complete guide (English)
+> - [PANDUAN_NEON_DATABASE.md](PANDUAN_NEON_DATABASE.md) - Panduan lengkap (Bahasa Indonesia)
+> - [NEON_CONNECTION_SUMMARY.md](NEON_CONNECTION_SUMMARY.md) - Implementation summary
+
+### Test Endpoints (After Deployment):
+- `/api/health` - Health check
+- `/api/test-db` - Database connection test
+- `/api/db-info` - Database information
 
 ## ⚠️ Device Verification Required
 

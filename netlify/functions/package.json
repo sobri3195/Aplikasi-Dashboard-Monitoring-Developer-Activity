@@ -1,0 +1,9 @@
+{
+  "name": "netlify-functions",
+  "version": "1.0.0",
+  "description": "Netlify serverless functions for DevMonitor",
+  "main": "api.js",
+  "dependencies": {
+    "@prisma/client": "^6.18.0"
+  }
+}

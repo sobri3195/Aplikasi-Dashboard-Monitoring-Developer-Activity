@@ -1,11 +1,27 @@
 [build]
   base = "dashboard"
-  command = "npm install && npm run build"
+  command = "cd ../backend && npm install && npx prisma generate && cd ../dashboard && npm install && npm run build"
   publish = "build"
 
 [build.environment]
   CI = "false"
   NODE_VERSION = "18"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  external_node_modules = ["@prisma/client", ".prisma/client"]
+
+[functions.api]
+  included_files = ["backend/prisma/**", "backend/node_modules/.prisma/**", "backend/node_modules/@prisma/**"]
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
 
 [[redirects]]
   from = "/*"
