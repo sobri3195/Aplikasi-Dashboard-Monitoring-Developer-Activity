@@ -65,6 +65,9 @@ const apiKeyAuth = asyncHandler(async (req, res, next) => {
 
 module.exports = {
   protect,
+  authenticate: protect,  // alias for protect
+  authenticateToken: protect,  // alias for protect
   authorize,
+  restrictTo: authorize,  // alias for authorize
   apiKeyAuth
 };
