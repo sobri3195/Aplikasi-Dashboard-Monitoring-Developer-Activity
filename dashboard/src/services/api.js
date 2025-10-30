@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { isDemoMode, getMockResponse } from './mockData';
+import { getMockResponse } from './mockData';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { SocketContext } from '../context/SocketContext';
+import React, { useState, useEffect } from 'react';
+import { useSocket } from '../context/SocketContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import {
@@ -15,7 +15,7 @@ import {
 import { format } from 'date-fns';
 
 const Monitoring = () => {
-  const socket = useContext(SocketContext);
+  const { socket } = useSocket();
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState([]);
   const [devices, setDevices] = useState([]);
@@ -62,6 +62,7 @@ const Monitoring = () => {
         socket.off('repository-status-changed');
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
 
   const fetchMonitoringData = async () => {
@@ -142,6 +143,7 @@ const Monitoring = () => {
 
   useEffect(() => {
     updateStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activities, devices, repositories, alerts]);
 
   if (loading) {

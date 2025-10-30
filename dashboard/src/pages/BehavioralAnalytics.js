@@ -36,6 +36,7 @@ const BehavioralAnalytics = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const fetchData = async () => {
