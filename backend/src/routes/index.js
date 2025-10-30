@@ -38,6 +38,13 @@ const securityLogRoutes = require('./securityLogRoutes');
 const behavioralAnalyticsRoutes = require('./behavioralAnalyticsRoutes');
 const deviceVerificationRoutes = require('./deviceVerificationRoutes');
 
+// New security features routes
+const developerRiskScoringRoutes = require('./developerRiskScoringRoutes');
+const repositoryIntegrityRoutes = require('./repositoryIntegrityRoutes');
+const aiAnomalyDetectionRoutes = require('./aiAnomalyDetectionRoutes');
+const complianceAuditRoutes = require('./complianceAuditRoutes');
+const tokenVaultRoutes = require('./tokenVaultRoutes');
+
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/devices', deviceRoutes);
@@ -80,5 +87,12 @@ router.use('/developer-stats', developerStatsRoutes);
 router.use('/security-logs', securityLogRoutes);
 router.use('/behavioral-analytics', behavioralAnalyticsRoutes);
 router.use('/device-verification', deviceVerificationRoutes);
+
+// New security features routes
+router.use('/developer-risk-scoring', developerRiskScoringRoutes);
+router.use('/repository-integrity', repositoryIntegrityRoutes);
+router.use('/ai-anomaly-detection', aiAnomalyDetectionRoutes);
+router.use('/compliance-audit', complianceAuditRoutes);
+router.use('/token-vault', tokenVaultRoutes);
 
 module.exports = router;

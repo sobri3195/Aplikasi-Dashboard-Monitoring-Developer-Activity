@@ -330,6 +330,66 @@ class CronService {
 
     this.jobs.push({ name: 'dailyBackup', job: dailyBackupJob });
 
+    // Auto-rotate expired tokens (every hour)
+    const tokenRotationJob = cron.schedule('0 * * * *', async () => {
+      try {
+        logger.info('Running token rotation job...');
+        const tokenVaultService = require('./tokenVaultService');
+        const result = await tokenVaultService.checkAndRotateExpiredTokens();
+        logger.info(`Token rotation completed: ${result.total} tokens checked`);
+      } catch (error) {
+        logger.error('Error rotating tokens:', error.message);
+      }
+    });
+
+    this.jobs.push({ name: 'tokenRotation', job: tokenRotationJob });
+
+    // Recalculate developer risk scores (daily at 6 AM)
+    const riskScoreJob = cron.schedule('0 6 * * *', async () => {
+      try {
+        logger.info('Running risk score recalculation job...');
+        const riskScoringService = require('./developerRiskScoringService');
+        const results = await riskScoringService.recalculateAllRiskScores();
+        logger.info(`Risk scores recalculated for ${results.length} developers`);
+      } catch (error) {
+        logger.error('Error recalculating risk scores:', error.message);
+      }
+    });
+
+    this.jobs.push({ name: 'riskScoreRecalculation', job: riskScoreJob });
+
+    // Generate monthly compliance reports (first day of month at 1 AM)
+    const monthlyReportJob = cron.schedule('0 1 1 * *', async () => {
+      try {
+        logger.info('Running monthly compliance report generation...');
+        const complianceService = require('./complianceAuditService');
+        await complianceService.scheduleMonthlyReports();
+        logger.info('Monthly compliance reports generated');
+      } catch (error) {
+        logger.error('Error generating monthly reports:', error.message);
+      }
+    });
+
+    this.jobs.push({ name: 'monthlyComplianceReport', job: monthlyReportJob });
+
+    // Verify audit chain integrity (daily at 4 AM)
+    const auditChainVerificationJob = cron.schedule('0 4 * * *', async () => {
+      try {
+        logger.info('Running audit chain verification...');
+        const complianceService = require('./complianceAuditService');
+        const result = await complianceService.verifyAuditChain();
+        logger.info(`Audit chain verification: ${result.isValid ? 'VALID' : 'INVALID'} - ${result.totalLogs} logs`);
+        
+        if (!result.isValid) {
+          logger.error('Audit chain integrity compromised!', result.issues);
+        }
+      } catch (error) {
+        logger.error('Error verifying audit chain:', error.message);
+      }
+    });
+
+    this.jobs.push({ name: 'auditChainVerification', job: auditChainVerificationJob });
+
     logger.info(`✅ ${this.jobs.length} cron jobs initialized`);
   }
 

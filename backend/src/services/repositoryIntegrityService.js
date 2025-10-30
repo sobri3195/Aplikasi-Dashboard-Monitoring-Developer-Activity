@@ -1,352 +1,397 @@
-const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
 const { PrismaClient } = require('@prisma/client');
-
+const crypto = require('crypto');
 const prisma = new PrismaClient();
 
-/**
- * Generate repository integrity hash
- */
-const generateRepositoryHash = (repositoryPath) => {
-  try {
-    // Create hash based on repository metadata
-    const gitPath = path.join(repositoryPath, '.git');
-    
-    if (!fs.existsSync(gitPath)) {
-      throw new Error('Not a git repository');
-    }
-
-    // Read git config
-    const gitConfigPath = path.join(gitPath, 'config');
-    const gitConfig = fs.readFileSync(gitConfigPath, 'utf8');
-
-    // Create integrity data
-    const integrityData = {
-      gitConfig,
-      timestamp: new Date().toISOString()
-    };
-
-    const hash = crypto
-      .createHash('sha256')
-      .update(JSON.stringify(integrityData))
-      .digest('hex');
-
-    return hash;
-  } catch (error) {
-    console.error('Generate repository hash error:', error);
-    return null;
+class RepositoryIntegrityService {
+  generateFileHash(content, algorithm = 'SHA-256') {
+    const hash = crypto.createHash('sha256');
+    hash.update(content);
+    return hash.digest('hex');
   }
-};
 
-/**
- * Create repository integrity record
- */
-const createIntegrityRecord = async (repositoryId, deviceId, repositoryPath) => {
-  try {
-    const hash = generateRepositoryHash(repositoryPath);
+  async registerCommitHash(repositoryId, commitHash, files) {
+    try {
+      const hashes = [];
 
-    if (!hash) {
-      return {
-        success: false,
-        message: 'Failed to generate repository hash'
-      };
-    }
+      for (const file of files) {
+        const fileHash = this.generateFileHash(file.content);
+        
+        const hash = await prisma.repositoryHash.create({
+          data: {
+            repositoryId,
+            filePath: file.path,
+            commitHash,
+            fileHash,
+            hashAlgorithm: 'SHA-256',
+            status: 'VERIFIED',
+            verifiedAt: new Date(),
+            verificationLog: {
+              registered: true,
+              timestamp: new Date(),
+              fileSize: file.content.length
+            }
+          }
+        });
 
-    // Store integrity record in repository details (using JSON field)
-    const repository = await prisma.repository.update({
-      where: { id: repositoryId },
-      data: {
-        // Store in a custom field or use existing JSON field
-        // For now, we'll track this via activity
+        hashes.push(hash);
       }
-    });
 
-    // Log the integrity check
-    await prisma.activity.create({
-      data: {
-        userId: (await prisma.device.findUnique({ where: { id: deviceId } })).userId,
-        deviceId,
-        activityType: 'REPO_ACCESS',
-        repository: repositoryId,
-        details: {
-          action: 'INTEGRITY_CHECK',
-          hash,
-          timestamp: new Date().toISOString()
-        },
-        isSuspicious: false,
-        riskLevel: 'LOW'
-      }
-    });
-
-    return {
-      success: true,
-      hash,
-      message: 'Integrity record created'
-    };
-  } catch (error) {
-    console.error('Create integrity record error:', error);
-    return {
-      success: false,
-      message: 'Failed to create integrity record'
-    };
-  }
-};
-
-/**
- * Verify repository integrity
- */
-const verifyRepositoryIntegrity = async (repositoryId, deviceId, repositoryPath) => {
-  try {
-    const currentHash = generateRepositoryHash(repositoryPath);
-
-    if (!currentHash) {
-      return {
-        valid: false,
-        message: 'Failed to generate current hash'
-      };
-    }
-
-    // Get last integrity check for this device
-    const lastCheck = await prisma.activity.findFirst({
-      where: {
-        deviceId,
-        repository: repositoryId,
-        activityType: 'REPO_ACCESS',
-        details: {
-          path: ['action'],
-          equals: 'INTEGRITY_CHECK'
+      await prisma.auditLog.create({
+        data: {
+          action: 'COMMIT_HASH_REGISTERED',
+          entity: 'Repository',
+          entityId: repositoryId,
+          changes: {
+            commitHash,
+            filesCount: files.length,
+            hashes: hashes.map(h => ({ path: h.filePath, hash: h.fileHash }))
+          }
         }
-      },
-      orderBy: {
-        timestamp: 'desc'
-      }
-    });
+      });
 
-    if (!lastCheck) {
-      // First time access, create integrity record
-      return await createIntegrityRecord(repositoryId, deviceId, repositoryPath);
+      return hashes;
+    } catch (error) {
+      console.error('Error registering commit hash:', error);
+      throw error;
     }
-
-    const lastHash = lastCheck.details?.hash;
-
-    // Check if repository was copied (hash should remain relatively stable)
-    // In real scenario, we'd have more sophisticated checks
-
-    return {
-      valid: true,
-      message: 'Repository integrity verified',
-      currentHash,
-      lastHash
-    };
-  } catch (error) {
-    console.error('Verify repository integrity error:', error);
-    return {
-      valid: false,
-      message: 'Integrity verification failed'
-    };
   }
-};
 
-/**
- * Detect repository copy attempt
- */
-const detectRepositoryCopy = async (repositoryId, deviceId, repositoryPath) => {
-  try {
-    // Check if this repository is being accessed from a new device
-    const device = await prisma.device.findUnique({
-      where: { id: deviceId }
-    });
-
-    if (!device) {
-      return {
-        detected: true,
-        reason: 'Unknown device attempting repository access',
-        risk: 'CRITICAL'
-      };
-    }
-
-    // Check if device is authorized
-    if (device.status !== 'APPROVED') {
-      return {
-        detected: true,
-        reason: `Unauthorized device (status: ${device.status})`,
-        risk: 'CRITICAL'
-      };
-    }
-
-    // Get repository to check original location
-    const repository = await prisma.repository.findUnique({
-      where: { id: repositoryId }
-    });
-
-    if (!repository) {
-      return {
-        detected: true,
-        reason: 'Repository not found in system',
-        risk: 'CRITICAL'
-      };
-    }
-
-    // Check if repository path matches any trusted paths
-    const repositoryProtectionService = require('./repositoryProtectionService');
-    const isTrusted = await repositoryProtectionService.isTrustedPath(repositoryId, repositoryPath);
-    
-    if (isTrusted) {
-      return {
-        detected: false,
-        reason: 'Repository in trusted path',
-        risk: 'LOW'
-      };
-    }
-
-    // Check previous access from this device
-    const devicePreviousAccess = await prisma.activity.findFirst({
-      where: {
-        repository: repositoryId,
-        deviceId: deviceId,
-        activityType: {
-          in: ['GIT_CLONE', 'REPO_ACCESS']
+  async verifyRepositoryIntegrity(repositoryId, commitHash, files) {
+    try {
+      const storedHashes = await prisma.repositoryHash.findMany({
+        where: {
+          repositoryId,
+          commitHash
         }
-      },
-      orderBy: {
-        timestamp: 'desc'
-      }
-    });
+      });
 
-    // If this device has accessed before, check if location changed
-    if (devicePreviousAccess && devicePreviousAccess.details?.repositoryPath) {
-      const previousPath = devicePreviousAccess.details.repositoryPath;
-      
-      if (previousPath !== repositoryPath) {
+      if (storedHashes.length === 0) {
         return {
-          detected: true,
-          reason: 'Repository location changed - possible copy or move',
-          risk: 'CRITICAL',
-          previousLocation: previousPath,
-          currentLocation: repositoryPath
+          status: 'PENDING_VERIFICATION',
+          message: 'No hash records found for this commit',
+          verified: false
         };
       }
-    }
 
-    // Check previous access from other devices
-    const otherDeviceAccess = await prisma.activity.findFirst({
-      where: {
-        repository: repositoryId,
-        deviceId: {
-          not: deviceId
-        },
-        activityType: {
-          in: ['GIT_CLONE', 'REPO_ACCESS']
+      const verificationResults = [];
+      let tamperedCount = 0;
+
+      for (const file of files) {
+        const currentHash = this.generateFileHash(file.content);
+        const storedHash = storedHashes.find(h => h.filePath === file.path);
+
+        if (!storedHash) {
+          verificationResults.push({
+            path: file.path,
+            status: 'NOT_FOUND',
+            message: 'File not in original commit'
+          });
+          tamperedCount++;
+          continue;
         }
-      },
-      orderBy: {
-        timestamp: 'desc'
-      },
-      include: {
-        device: true
-      }
-    });
 
-    if (otherDeviceAccess) {
-      // Check if this is a legitimate multi-device setup or a copy
-      const timeDiff = Date.now() - otherDeviceAccess.timestamp.getTime();
-      const hoursDiff = timeDiff / (1000 * 60 * 60);
+        if (currentHash !== storedHash.fileHash) {
+          tamperedCount++;
+          
+          await prisma.repositoryHash.update({
+            where: { id: storedHash.id },
+            data: {
+              status: 'TAMPERED',
+              tamperedAt: new Date(),
+              verificationLog: {
+                tampered: true,
+                timestamp: new Date(),
+                expectedHash: storedHash.fileHash,
+                actualHash: currentHash
+              }
+            }
+          });
 
-      // If accessed from different device within 1 hour, might be a copy
-      if (hoursDiff < 1) {
-        return {
-          detected: true,
-          reason: 'Repository accessed from multiple devices in short time',
-          risk: 'HIGH',
-          previousDevice: otherDeviceAccess.device.deviceName,
-          timeDiff: hoursDiff
-        };
+          verificationResults.push({
+            path: file.path,
+            status: 'TAMPERED',
+            expectedHash: storedHash.fileHash,
+            actualHash: currentHash,
+            message: 'File content does not match stored hash'
+          });
+        } else {
+          await prisma.repositoryHash.update({
+            where: { id: storedHash.id },
+            data: {
+              lastChecked: new Date()
+            }
+          });
+
+          verificationResults.push({
+            path: file.path,
+            status: 'VERIFIED',
+            hash: currentHash,
+            message: 'File integrity verified'
+          });
+        }
       }
+
+      const overallStatus = tamperedCount > 0 ? 'TAMPERED' : 'VERIFIED';
+
+      if (tamperedCount > 0) {
+        await this.handleIntegrityViolation(repositoryId, commitHash, verificationResults);
+      }
+
+      return {
+        status: overallStatus,
+        verified: tamperedCount === 0,
+        totalFiles: files.length,
+        tamperedFiles: tamperedCount,
+        verifiedFiles: files.length - tamperedCount,
+        details: verificationResults,
+        timestamp: new Date()
+      };
+    } catch (error) {
+      console.error('Error verifying repository integrity:', error);
+      throw error;
     }
-
-    return {
-      detected: false,
-      reason: 'No copy detected',
-      risk: 'LOW'
-    };
-  } catch (error) {
-    console.error('Detect repository copy error:', error);
-    return {
-      detected: true,
-      reason: 'Detection error - treating as suspicious',
-      risk: 'HIGH',
-      error: error.message
-    };
   }
-};
 
-/**
- * Handle unauthorized repository access
- */
-const handleUnauthorizedAccess = async (repositoryId, deviceId, reason) => {
-  try {
-    // Get device and user info
-    const device = await prisma.device.findUnique({
-      where: { id: deviceId },
-      include: { user: true }
-    });
+  async handleIntegrityViolation(repositoryId, commitHash, verificationResults) {
+    try {
+      const tamperedFiles = verificationResults.filter(r => r.status === 'TAMPERED');
 
-    // Log suspicious activity
-    const activity = await prisma.activity.create({
-      data: {
-        userId: device.userId,
-        deviceId,
-        activityType: 'UNAUTHORIZED_ACCESS',
-        repository: repositoryId,
-        details: {
-          reason,
-          timestamp: new Date().toISOString()
+      await prisma.alert.create({
+        data: {
+          alertType: 'REPO_ENCRYPTED',
+          severity: 'CRITICAL',
+          message: `🚨 Repository integrity violation detected - ${tamperedFiles.length} file(s) tampered`,
+          details: {
+            repositoryId,
+            commitHash,
+            tamperedFiles: tamperedFiles.map(f => f.path),
+            timestamp: new Date()
+          }
+        }
+      });
+
+      await prisma.repository.update({
+        where: { id: repositoryId },
+        data: {
+          securityStatus: 'COMPROMISED'
+        }
+      });
+
+      await prisma.securityLog.create({
+        data: {
+          logType: 'POLICY_VIOLATION',
+          severity: 'CRITICAL',
+          message: 'Repository integrity compromised',
+          details: {
+            repositoryId,
+            commitHash,
+            tamperedCount: tamperedFiles.length,
+            files: tamperedFiles.map(f => ({
+              path: f.path,
+              expectedHash: f.expectedHash,
+              actualHash: f.actualHash
+            }))
+          }
+        }
+      });
+
+      await this.notifyAdmins(repositoryId, tamperedFiles);
+    } catch (error) {
+      console.error('Error handling integrity violation:', error);
+    }
+  }
+
+  async notifyAdmins(repositoryId, tamperedFiles) {
+    try {
+      const admins = await prisma.user.findMany({
+        where: { role: 'ADMIN' }
+      });
+
+      const repository = await prisma.repository.findUnique({
+        where: { id: repositoryId }
+      });
+
+      for (const admin of admins) {
+        console.log(`Notifying admin ${admin.email} about integrity violation in ${repository?.name}`);
+      }
+    } catch (error) {
+      console.error('Error notifying admins:', error);
+    }
+  }
+
+  async getIntegrityStatus(repositoryId) {
+    try {
+      const hashes = await prisma.repositoryHash.findMany({
+        where: { repositoryId },
+        orderBy: { verifiedAt: 'desc' }
+      });
+
+      const total = hashes.length;
+      const verified = hashes.filter(h => h.status === 'VERIFIED').length;
+      const tampered = hashes.filter(h => h.status === 'TAMPERED').length;
+      const corrupted = hashes.filter(h => h.status === 'CORRUPTED').length;
+
+      const repository = await prisma.repository.findUnique({
+        where: { id: repositoryId }
+      });
+
+      return {
+        repositoryId,
+        repositoryName: repository?.name,
+        status: repository?.securityStatus,
+        integrity: {
+          total,
+          verified,
+          tampered,
+          corrupted,
+          percentage: total > 0 ? (verified / total) * 100 : 0
         },
-        isSuspicious: true,
-        riskLevel: 'CRITICAL'
-      }
-    });
-
-    // Create alert
-    await prisma.alert.create({
-      data: {
-        activityId: activity.id,
-        alertType: 'REPO_COPY_DETECTED',
-        severity: 'CRITICAL',
-        message: `Unauthorized access detected: ${reason}`,
-        notified: false
-      }
-    });
-
-    // Mark repository as compromised and encrypt
-    await prisma.repository.update({
-      where: { id: repositoryId },
-      data: {
-        securityStatus: 'COMPROMISED',
-        isEncrypted: true,
-        encryptedAt: new Date()
-      }
-    });
-
-    return {
-      success: true,
-      action: 'REPOSITORY_ENCRYPTED',
-      message: 'Repository has been encrypted due to unauthorized access'
-    };
-  } catch (error) {
-    console.error('Handle unauthorized access error:', error);
-    return {
-      success: false,
-      message: 'Failed to handle unauthorized access'
-    };
+        lastChecked: hashes[0]?.lastChecked,
+        recentHashes: hashes.slice(0, 10)
+      };
+    } catch (error) {
+      console.error('Error getting integrity status:', error);
+      throw error;
+    }
   }
-};
 
-module.exports = {
-  generateRepositoryHash,
-  createIntegrityRecord,
-  verifyRepositoryIntegrity,
-  detectRepositoryCopy,
-  handleUnauthorizedAccess
-};
+  async getHashTimeline(repositoryId, filePath) {
+    try {
+      const timeline = await prisma.repositoryHash.findMany({
+        where: {
+          repositoryId,
+          filePath
+        },
+        orderBy: { verifiedAt: 'desc' }
+      });
+
+      return timeline;
+    } catch (error) {
+      console.error('Error getting hash timeline:', error);
+      throw error;
+    }
+  }
+
+  async getAllRepositoriesIntegrityStatus() {
+    try {
+      const repositories = await prisma.repository.findMany();
+      const results = [];
+
+      for (const repo of repositories) {
+        const status = await this.getIntegrityStatus(repo.id);
+        results.push(status);
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Error getting all repositories integrity status:', error);
+      throw error;
+    }
+  }
+
+  async generateIntegrityReport(repositoryId, startDate, endDate) {
+    try {
+      const hashes = await prisma.repositoryHash.findMany({
+        where: {
+          repositoryId,
+          verifiedAt: {
+            gte: startDate,
+            lte: endDate
+          }
+        },
+        orderBy: { verifiedAt: 'desc' }
+      });
+
+      const violations = hashes.filter(h => h.status === 'TAMPERED' || h.status === 'CORRUPTED');
+
+      const report = {
+        repositoryId,
+        period: { start: startDate, end: endDate },
+        summary: {
+          totalChecks: hashes.length,
+          violations: violations.length,
+          integrityRate: hashes.length > 0 
+            ? ((hashes.length - violations.length) / hashes.length * 100).toFixed(2) 
+            : 100
+        },
+        violations: violations.map(v => ({
+          filePath: v.filePath,
+          commitHash: v.commitHash,
+          status: v.status,
+          tamperedAt: v.tamperedAt,
+          verificationLog: v.verificationLog
+        })),
+        generatedAt: new Date()
+      };
+
+      return report;
+    } catch (error) {
+      console.error('Error generating integrity report:', error);
+      throw error;
+    }
+  }
+
+  async markAsEncrypted(repositoryId) {
+    try {
+      await prisma.repositoryHash.updateMany({
+        where: { repositoryId },
+        data: { status: 'ENCRYPTED' }
+      });
+
+      await prisma.repository.update({
+        where: { id: repositoryId },
+        data: {
+          securityStatus: 'ENCRYPTED',
+          isEncrypted: true,
+          encryptedAt: new Date()
+        }
+      });
+
+      return { success: true, message: 'Repository marked as encrypted' };
+    } catch (error) {
+      console.error('Error marking repository as encrypted:', error);
+      throw error;
+    }
+  }
+
+  async getDashboardStats() {
+    try {
+      const totalRepos = await prisma.repository.count();
+      const verifiedRepos = await prisma.repository.count({
+        where: { securityStatus: 'SECURE' }
+      });
+      const compromisedRepos = await prisma.repository.count({
+        where: { securityStatus: 'COMPROMISED' }
+      });
+      const encryptedRepos = await prisma.repository.count({
+        where: { securityStatus: 'ENCRYPTED' }
+      });
+
+      const totalHashes = await prisma.repositoryHash.count();
+      const tamperedHashes = await prisma.repositoryHash.count({
+        where: { status: 'TAMPERED' }
+      });
+
+      return {
+        repositories: {
+          total: totalRepos,
+          verified: verifiedRepos,
+          compromised: compromisedRepos,
+          encrypted: encryptedRepos
+        },
+        hashes: {
+          total: totalHashes,
+          tampered: tamperedHashes,
+          integrityRate: totalHashes > 0 
+            ? ((totalHashes - tamperedHashes) / totalHashes * 100).toFixed(2)
+            : 100
+        }
+      };
+    } catch (error) {
+      console.error('Error getting dashboard stats:', error);
+      throw error;
+    }
+  }
+}
+
+module.exports = new RepositoryIntegrityService();
