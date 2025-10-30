@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import DatabaseConnectionStatus from './DatabaseConnectionStatus';
 import {
   HomeIcon,
   ComputerDesktopIcon,
@@ -18,10 +19,12 @@ import {
   DocumentTextIcon,
   ExclamationTriangleIcon,
   ShieldExclamationIcon,
+  CircleStackIcon,
 } from '@heroicons/react/24/outline';
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showDbStatus, setShowDbStatus] = useState(false);
   const { user, logout } = useAuth();
   const { connected } = useSocket();
   const location = useLocation();
@@ -99,18 +102,32 @@ const Layout = () => {
             </nav>
 
             <div className="p-4 border-t border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-gray-600">Status</span>
-                <div className="flex items-center">
-                  <div
-                    className={`h-2 w-2 rounded-full mr-2 ${
-                      connected ? 'bg-green-500' : 'bg-red-500'
-                    }`}
-                  ></div>
-                  <span className="text-xs text-gray-500">
-                    {connected ? 'Connected' : 'Disconnected'}
-                  </span>
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">WebSocket</span>
+                  <div className="flex items-center">
+                    <div
+                      className={`h-2 w-2 rounded-full mr-2 ${
+                        connected ? 'bg-green-500' : 'bg-red-500'
+                      }`}
+                    ></div>
+                    <span className="text-xs text-gray-500">
+                      {connected ? 'Connected' : 'Disconnected'}
+                    </span>
+                  </div>
                 </div>
+                
+                <button
+                  onClick={() => setShowDbStatus(true)}
+                  className="w-full flex items-center justify-between px-3 py-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-sm"
+                  title="Check database connection"
+                >
+                  <div className="flex items-center">
+                    <CircleStackIcon className="h-4 w-4 text-blue-600 mr-2" />
+                    <span className="text-blue-700">Database Status</span>
+                  </div>
+                  <span className="text-blue-600">→</span>
+                </button>
               </div>
 
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -150,6 +167,11 @@ const Layout = () => {
           </main>
         </div>
       </div>
+
+      {/* Database Connection Status Modal */}
+      {showDbStatus && (
+        <DatabaseConnectionStatus onClose={() => setShowDbStatus(false)} />
+      )}
     </div>
   );
 };

@@ -44,8 +44,10 @@ const repositoryIntegrityRoutes = require('./repositoryIntegrityRoutes');
 const aiAnomalyDetectionRoutes = require('./aiAnomalyDetectionRoutes');
 const complianceAuditRoutes = require('./complianceAuditRoutes');
 const tokenVaultRoutes = require('./tokenVaultRoutes');
+const dbConnectionRoutes = require('./dbConnectionRoutes');
 
 router.use('/health', healthRoutes);
+router.use('/db-connection', dbConnectionRoutes);
 router.use('/auth', authRoutes);
 router.use('/devices', deviceRoutes);
 router.use('/activities', activityRoutes);
