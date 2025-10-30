@@ -15,9 +15,6 @@
 [functions.api]
   included_files = ["backend/prisma/**", "backend/node_modules/.prisma/**", "backend/node_modules/@prisma/**"]
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api/:splat"
