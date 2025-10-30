@@ -23,6 +23,7 @@ model User {
   activities Activity[]
   sessions   UserSession[]
   notificationPreferences NotificationPreference[]
+  riskScore  DeveloperRiskScore?
 
   @@map("users")
 }
@@ -498,6 +499,8 @@ model AnomalyDetection {
   isFalsePositive  Boolean  @default(false)
   timestamp        DateTime @default(now())
 
+  anomalyResponses AnomalyResponse[]
+
   @@index([userId])
   @@index([anomalyType])
   @@index([isReviewed])
@@ -562,4 +565,280 @@ enum VerificationRequestStatus {
   APPROVED
   REJECTED
   EXPIRED
+}
+
+// Feature 1: Developer Behavior Risk Scoring
+model DeveloperRiskScore {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  riskScore       Float    @default(0)
+  status          RiskStatus @default(NORMAL)
+  cloneFrequency  Int      @default(0)
+  pushFrequency   Int      @default(0)
+  accessPatterns  Json?
+  anomalyCount    Int      @default(0)
+  lastEvaluated   DateTime @default(now())
+  watchStatus     Boolean  @default(false)
+  alertHistory    Json?
+  recommendations Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([riskScore])
+  @@index([watchStatus])
+  @@map("developer_risk_scores")
+}
+
+enum RiskStatus {
+  NORMAL
+  ELEVATED
+  HIGH
+  UNDER_WATCH
+  CRITICAL
+}
+
+// Feature 2: Repository Integrity Verification
+model RepositoryHash {
+  id            String         @id @default(uuid())
+  repositoryId  String
+  filePath      String
+  commitHash    String
+  fileHash      String
+  hashAlgorithm String         @default("SHA-256")
+  status        IntegrityStatus @default(VERIFIED)
+  verifiedAt    DateTime       @default(now())
+  lastChecked   DateTime       @default(now())
+  tamperedAt    DateTime?
+  verificationLog Json?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([repositoryId, filePath, commitHash])
+  @@index([repositoryId])
+  @@index([status])
+  @@map("repository_hashes")
+}
+
+enum IntegrityStatus {
+  VERIFIED
+  TAMPERED
+  CORRUPTED
+  PENDING_VERIFICATION
+  ENCRYPTED
+}
+
+// Feature 3: Enhanced AI Anomaly Detection (baseline learning)
+model AnomalyBaseline {
+  id                  String   @id @default(uuid())
+  userId              String
+  deviceId            String   @default("")
+  baselineType        BaselineType
+  normalPattern       Json
+  threshold           Float    @default(0.75)
+  sampleSize          Int      @default(0)
+  lastTrainingDate    DateTime @default(now())
+  accuracy            Float?
+  modelVersion        String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([userId, deviceId, baselineType])
+  @@index([userId])
+  @@map("anomaly_baselines")
+}
+
+enum BaselineType {
+  WORKING_HOURS
+  COMMIT_VOLUME
+  FILE_TYPES
+  REPOSITORY_PATTERN
+  COMMAND_SEQUENCE
+}
+
+model AnomalyResponse {
+  id              String           @id @default(uuid())
+  anomalyId       String
+  responseType    ResponseType
+  action          String
+  executedAt      DateTime         @default(now())
+  executedBy      String?
+  status          ResponseStatus   @default(PENDING)
+  details         Json?
+  
+  @@index([anomalyId])
+  @@index([responseType])
+  @@map("anomaly_responses")
+}
+
+enum ResponseType {
+  ALERT_ONLY
+  SUSPEND_REPO
+  ENCRYPT_REPO
+  REVOKE_ACCESS
+  NOTIFY_ADMIN
+}
+
+enum ResponseStatus {
+  PENDING
+  EXECUTED
+  FAILED
+  CANCELLED
+}
+
+// Feature 4: Compliance & Audit Trail Module
+model ComplianceReport {
+  id              String           @id @default(uuid())
+  reportType      ComplianceType
+  period          String
+  startDate       DateTime
+  endDate         DateTime
+  status          ReportStatus     @default(GENERATING)
+  filePath        String?
+  format          ReportFormat     @default(PDF)
+  summary         Json?
+  violations      Json?
+  recommendations Json?
+  generatedBy     String?
+  generatedAt     DateTime?
+  expiresAt       DateTime?
+  isArchived      Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+
+  @@index([reportType])
+  @@index([status])
+  @@index([generatedAt])
+  @@map("compliance_reports")
+}
+
+enum ComplianceType {
+  ISO27001
+  SOC2
+  GDPR
+  PDPA
+  HIPAA
+  PCI_DSS
+  CUSTOM
+}
+
+enum ReportStatus {
+  GENERATING
+  COMPLETED
+  FAILED
+  ARCHIVED
+}
+
+enum ReportFormat {
+  PDF
+  CSV
+  JSON
+  XLSX
+}
+
+model ImmutableAuditLog {
+  id             String   @id @default(uuid())
+  logHash        String   @unique
+  previousHash   String?
+  userId         String?
+  action         String
+  entity         String?
+  entityId       String?
+  changes        Json?
+  ipAddress      String?
+  userAgent      String?
+  timestamp      DateTime @default(now())
+  blockNumber    Int
+  isVerified     Boolean  @default(true)
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([blockNumber])
+  @@map("immutable_audit_logs")
+}
+
+// Feature 5: Developer Access Token Vault & Rotation System
+model AccessToken {
+  id                String         @id @default(uuid())
+  userId            String
+  tokenName         String
+  encryptedToken    String
+  encryptionKey     String
+  tokenType         TokenType      @default(GIT_ACCESS)
+  scope             Json?
+  deviceId          String?
+  isActive          Boolean        @default(true)
+  rotationPolicy    Int            @default(30)
+  lastRotated       DateTime       @default(now())
+  nextRotation      DateTime
+  rotationCount     Int            @default(0)
+  accessCount       Int            @default(0)
+  lastUsed          DateTime?
+  isCompromised     Boolean        @default(false)
+  compromisedAt     DateTime?
+  revokedAt         DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  tokenRotationHistory TokenRotationHistory[]
+  tokenAccessLogs      TokenAccessLog[]
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([isActive])
+  @@index([nextRotation])
+  @@map("access_tokens")
+}
+
+enum TokenType {
+  GIT_ACCESS
+  API_KEY
+  SSH_KEY
+  PERSONAL_ACCESS_TOKEN
+  DEPLOYMENT_KEY
+}
+
+model TokenRotationHistory {
+  id            String   @id @default(uuid())
+  tokenId       String
+  oldTokenHash  String
+  newTokenHash  String
+  rotatedAt     DateTime @default(now())
+  reason        RotationReason
+  rotatedBy     String?
+  deviceId      String?
+  
+  token         AccessToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  
+  @@index([tokenId])
+  @@index([rotatedAt])
+  @@map("token_rotation_history")
+}
+
+enum RotationReason {
+  SCHEDULED
+  COMPROMISED
+  SUSPICIOUS_ACTIVITY
+  MANUAL
+  DEVICE_CHANGE
+  POLICY_UPDATE
+}
+
+model TokenAccessLog {
+  id          String   @id @default(uuid())
+  tokenId     String
+  deviceId    String?
+  ipAddress   String?
+  location    String?
+  action      String
+  isAuthorized Boolean @default(true)
+  timestamp   DateTime @default(now())
+  
+  token       AccessToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  
+  @@index([tokenId])
+  @@index([timestamp])
+  @@index([isAuthorized])
+  @@map("token_access_logs")
 }
