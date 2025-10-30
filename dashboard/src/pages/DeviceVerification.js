@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
-import { AuthContext } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import {
   ComputerDesktopIcon,
   CheckCircleIcon,
@@ -12,7 +12,7 @@ import {
 import { format } from 'date-fns';
 
 const DeviceVerification = () => {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [devices, setDevices] = useState([]);

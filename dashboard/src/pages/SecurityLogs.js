@@ -3,7 +3,6 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 import {
   ShieldExclamationIcon,
-  ClockIcon,
   ServerIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
@@ -26,6 +25,7 @@ const SecurityLogs = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const fetchData = async () => {

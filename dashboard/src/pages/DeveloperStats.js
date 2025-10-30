@@ -31,24 +31,22 @@ const DeveloperStats = () => {
   const [groupBy, setGroupBy] = useState('time');
   const [activityStats, setActivityStats] = useState([]);
   const [performanceMetrics, setPerformanceMetrics] = useState(null);
-  const [heatmapData, setHeatmapData] = useState([]);
 
   useEffect(() => {
     fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange, groupBy]);
 
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const [statsRes, metricsRes, heatmapRes] = await Promise.all([
+      const [statsRes, metricsRes] = await Promise.all([
         api.get(`/api/developer-stats/activity-stats?timeRange=${timeRange}&groupBy=${groupBy}`),
-        api.get(`/api/developer-stats/performance-metrics?timeRange=${timeRange}`),
-        api.get(`/api/developer-stats/heatmap?timeRange=30d`)
+        api.get(`/api/developer-stats/performance-metrics?timeRange=${timeRange}`)
       ]);
 
       setActivityStats(statsRes.data.data);
       setPerformanceMetrics(metricsRes.data.data);
-      setHeatmapData(heatmapRes.data.data);
     } catch (error) {
       toast.error('Failed to load developer statistics');
       console.error(error);
