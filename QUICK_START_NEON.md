@@ -1,129 +1,212 @@
-# 🚀 Quick Start - Koneksi Database Neon
+# 🚀 Quick Start: Setup Neon Database
 
-## ⚡ Ringkasan Cepat (5 Menit)
+Panduan cepat untuk menghubungkan backend ke Neon PostgreSQL dalam 5 menit.
 
-### 1️⃣ Dapatkan Connection String dari Neon
+## ⚡ Setup Cepat (Recommended)
 
-1. Login ke https://console.neon.tech
-2. Pilih project Anda
-3. Klik "Connection Details"
+```bash
+# 1. Masuk ke folder backend
+cd backend
+
+# 2. Install dependencies
+npm install
+
+# 3. Jalankan setup script otomatis
+npm run db:setup
+```
+
+Script akan memandu Anda langkah demi langkah! 🎯
+
+## 📝 Setup Manual
+
+### Step 1: Buat Account Neon
+
+1. Kunjungi [https://console.neon.tech](https://console.neon.tech)
+2. Sign up (gratis!)
+3. Verifikasi email
+
+### Step 2: Buat Database
+
+1. Klik "Create Project"
+2. Buat database dengan nama: `crimson-base-54008430`
+3. Pilih region terdekat
 4. Copy connection string
 
-### 2️⃣ Isi File .env
-
-Edit file `backend/.env`:
-
-```bash
-# Hapus # dan ganti dengan connection string Anda
-DATABASE_URL=postgresql://user:password@ep-xxx-xxx.neon.tech/crimson-base-54008430?sslmode=require
-```
-
-### 3️⃣ Install & Migrate
+### Step 3: Konfigurasi Backend
 
 ```bash
 cd backend
-npm install
-npx prisma migrate deploy
+
+# Buat file .env
+cp .env.example .env
+
+# Edit .env dan update DATABASE_URL
+nano .env
+```
+
+Paste connection string dari Neon:
+```env
+DATABASE_URL=postgresql://user:pass@ep-xxx.neon.tech/crimson-base-54008430?sslmode=require
+```
+
+### Step 4: Setup Database
+
+```bash
+# Generate Prisma Client
 npx prisma generate
+
+# Deploy migrations
+npx prisma migrate deploy
+
+# (Optional) Seed data demo
+npm run db:seed
 ```
 
-### 4️⃣ Start Aplikasi
+### Step 5: Start Server
 
 ```bash
-# Terminal 1 - Backend
+# Development mode
+npm run dev
+
+# atau Production mode
+npm start
+```
+
+Server akan berjalan di `http://localhost:5000` 🎉
+
+## ✅ Verifikasi Setup
+
+### Test 1: Check Connection
+
+```bash
+npm run db:check
+```
+
+Harus menampilkan:
+```
+✅ Database connected successfully!
+✅ All database tables are accessible!
+```
+
+### Test 2: API Health Check
+
+```bash
+curl http://localhost:5000/health
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+### Test 3: Database Status
+
+```bash
+curl http://localhost:5000/api/db/status
+```
+
+Response:
+```json
+{
+  "connected": true,
+  "database": "crimson-base-54008430",
+  "provider": "Neon PostgreSQL",
+  "message": "Successfully connected to Neon database"
+}
+```
+
+## 🎯 Next Steps
+
+### 1. Explore Database
+
+```bash
+npm run prisma:studio
+```
+
+Browser akan membuka Prisma Studio di `http://localhost:5555`
+
+### 2. Seed Demo Data (Optional)
+
+```bash
+npm run db:seed
+```
+
+Ini akan membuat:
+- ✅ Demo user accounts
+- ✅ Sample activities
+- ✅ Test devices
+- ✅ Sample alerts
+
+### 3. Start Dashboard (Frontend)
+
+```bash
+cd ../dashboard
+npm install
+npm start
+```
+
+Dashboard akan berjalan di `http://localhost:3000`
+
+## 🔧 Useful Commands
+
+| Command | Purpose |
+|---------|---------|
+| `npm run db:check` | Check database connection |
+| `npm run db:setup` | Automated setup wizard |
+| `npm run prisma:studio` | Open database GUI |
+| `npm run dev` | Start dev server |
+| `npm run db:seed` | Seed demo data |
+
+## ❓ Troubleshooting
+
+### "DATABASE_URL not configured"
+
+```bash
 cd backend
-npm start
-
-# Terminal 2 - Frontend
-cd dashboard
-npm start
+cp .env.example .env
+# Edit .env dan tambahkan DATABASE_URL
 ```
 
-### 5️⃣ Cek Status
+### "Authentication failed"
 
-- Buka browser: http://localhost:3000
-- Login ke dashboard
-- Klik "Database Status" di sidebar
-- Status harus "Connected" ✅
+- Cek username/password di Neon Console
+- Copy ulang connection string
+- Pastikan `?sslmode=require` ada di akhir URL
 
----
-
-## 🔍 Cek Status via API
+### "Table does not exist"
 
 ```bash
-# Cek status koneksi
-curl http://localhost:5000/api/db-connection/status
-
-# Test koneksi detail
-curl http://localhost:5000/api/db-connection/test
-
-# Lihat panduan setup
-curl http://localhost:5000/api/db-connection/guide
+cd backend
+npx prisma migrate deploy
 ```
 
----
+### "Cannot connect to database"
 
-## ❌ Jika Status "Disconnected"
+- Pastikan Neon project aktif (tidak suspended)
+- Cek koneksi internet
+- Verifikasi connection string benar
 
-### Yang Harus Diisi:
+## 📚 Documentation
 
-**FILE:** `backend/.env`
+- **Full Setup Guide:** [SETUP_NEON_DATABASE.md](./SETUP_NEON_DATABASE.md)
+- **Backend README:** [backend/README.md](./backend/README.md)
+- **Neon Docs:** [https://neon.tech/docs](https://neon.tech/docs)
+- **Prisma Docs:** [https://www.prisma.io/docs](https://www.prisma.io/docs)
 
-**WAJIB:**
-```bash
-DATABASE_URL=postgresql://[user]:[password]@[endpoint].neon.tech/crimson-base-54008430?sslmode=require
-```
+## 🎊 Success!
 
-**Ganti:**
-- `[user]` → username dari Neon
-- `[password]` → password dari Neon  
-- `[endpoint]` → endpoint dari Neon (contoh: ep-cool-name-123456.us-east-2.aws)
+Jika semua test berhasil, Anda sudah siap untuk:
+- ✅ Develop aplikasi
+- ✅ Monitor developer activities
+- ✅ Track security alerts
+- ✅ Manage devices
+- ✅ View analytics
 
-**Contoh Lengkap:**
-```bash
-DATABASE_URL=postgresql://neondb_owner:AbCd1234XyZ@ep-wild-fire-123456.us-east-2.aws.neon.tech/crimson-base-54008430?sslmode=require
-```
-
-### Langkah Selanjutnya:
-
-1. Save file `.env`
-2. Restart aplikasi backend
-3. Refresh browser
-4. Cek status lagi
+Happy coding! 🚀
 
 ---
 
-## 📚 Dokumentasi Lengkap
-
-Untuk panduan detail, lihat:
-- [CARA_KONEKSI_DATABASE.md](./CARA_KONEKSI_DATABASE.md) - Panduan lengkap Indonesia
-- [PANDUAN_NEON_DATABASE.md](./PANDUAN_NEON_DATABASE.md) - Panduan deployment Netlify
-- [NEON_DATABASE_SETUP.md](./NEON_DATABASE_SETUP.md) - Setup guide (English)
-
----
-
-## 🆘 Troubleshooting Cepat
-
-| Problem | Solusi |
-|---------|--------|
-| "DATABASE_URL not configured" | Isi DATABASE_URL di file `.env` |
-| "Authentication failed" | Cek username/password di connection string |
-| "Connection timeout" | Tunggu beberapa saat (cold start) atau cek Neon dashboard |
-| "SSL/TLS Error" | Tambahkan `?sslmode=require` di akhir URL |
-| "Table does not exist" | Jalankan: `npx prisma migrate deploy` |
-
----
-
-## ✅ Checklist
-
-- [ ] Akun Neon sudah ada
-- [ ] Connection string sudah di-copy
-- [ ] File `.env` sudah diisi dengan DATABASE_URL
-- [ ] `npm install` sudah dijalankan
-- [ ] `npx prisma migrate deploy` sudah dijalankan
-- [ ] Aplikasi sudah running
-- [ ] Status menampilkan "Connected" ✓
-
----
-
-**Selesai! Database Anda sudah terhubung! 🎉**
+**Need Help?** Check [SETUP_NEON_DATABASE.md](./SETUP_NEON_DATABASE.md) for detailed troubleshooting.
