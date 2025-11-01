@@ -59,3 +59,10 @@ temp/
 .repo-encrypted.lock
 .repo-access-blocked
 .repo-setup-instructions.md
+
+# Drizzle ORM
+drizzle/
+.drizzle/
+
+# Netlify
+.netlify/
