@@ -159,15 +159,38 @@ cd dashboard-monitoring-dev-activity
 > **🚀 Untuk langkah cepat dalam Bahasa Indonesia, lihat [QUICK_START.md](QUICK_START.md)**
 > 
 > **🔧 Jika login tidak berfungsi, lihat [PERBAIKAN_LOGIN.md](PERBAIKAN_LOGIN.md)**
+>
+> **💾 Setup Database Neon: [QUICK_START_NEON.md](QUICK_START_NEON.md)** - Panduan setup database dalam 5 menit
 
 ### Prerequisites
 
 - Node.js 18+
 - Python 3.8+
-- PostgreSQL 14+
+- PostgreSQL 14+ or Neon Database (Recommended for production)
 - Docker & Docker Compose (optional)
 
 ### Fast Setup (Recommended)
+
+#### Option 1: With Neon Database (Production-Ready)
+
+```bash
+# 1. Setup backend with Neon
+cd backend
+npm install
+npm run db:setup
+
+# 2. Start backend
+npm start
+
+# 3. In another terminal, start dashboard
+cd dashboard
+npm install
+npm start
+
+# Access dashboard at http://localhost:3000
+```
+
+#### Option 2: With Local PostgreSQL
 
 ```bash
 # Run automated setup script
@@ -185,7 +208,40 @@ cd dashboard && npm start
 
 ### Installation
 
-#### Using Docker (Recommended)
+#### Using Neon Database (Recommended for Production)
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd dashboard-monitoring-dev-activity
+
+# Setup backend with Neon
+cd backend
+npm install
+npm run db:setup
+
+# Follow the interactive prompts to configure Neon connection
+# The script will guide you through:
+# 1. Getting Neon connection string
+# 2. Configuring environment variables
+# 3. Running database migrations
+# 4. Testing the connection
+
+# Start backend
+npm start
+
+# In another terminal, setup and start dashboard
+cd ../dashboard
+npm install
+npm start
+
+# Dashboard will be available at http://localhost:3000
+# Backend API will be available at http://localhost:5000
+```
+
+> 📖 **See [QUICK_START_NEON.md](QUICK_START_NEON.md) for detailed Neon setup guide**
+
+#### Using Docker (Alternative)
 
 ```bash
 # Clone repository

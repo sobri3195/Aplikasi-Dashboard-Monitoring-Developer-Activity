@@ -11,8 +11,12 @@
     "db:push": "npx prisma db push",
     "db:seed": "node src/database/seed.js",
     "prisma:generate": "npx prisma generate",
+    "prisma:studio": "npx prisma studio",
     "postinstall": "npx prisma generate",
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "db:check": "node scripts/check-neon-connection.js",
+    "db:setup": "bash setup-neon-db.sh",
+    "neon:check": "node scripts/check-neon-connection.js"
   },
   "keywords": [
     "monitoring",
