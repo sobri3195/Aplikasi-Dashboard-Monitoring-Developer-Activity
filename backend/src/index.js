@@ -12,8 +12,16 @@ const { errorHandler } = require('./middleware/errorHandler');
 const routes = require('./routes');
 const { initSocketIO } = require('./services/socketService');
 const cronService = require('./services/cronService');
+const { 
+  initSentry, 
+  getSentryRequestHandler, 
+  getSentryTracingHandler, 
+  getSentryErrorHandler 
+} = require('./config/sentry');
 
 const app = express();
+
+initSentry(app);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -30,6 +38,9 @@ const limiter = rateLimit({
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
   message: 'Too many requests from this IP, please try again later.'
 });
+
+app.use(getSentryRequestHandler());
+app.use(getSentryTracingHandler());
 
 app.use(helmet());
 app.use(cors({
@@ -53,6 +64,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api', routes);
 
+app.use(getSentryErrorHandler());
 app.use(errorHandler);
 
 server.listen(PORT, () => {
@@ -65,12 +77,16 @@ server.listen(PORT, () => {
   }
 });
 
+const { captureException } = require('./config/sentry');
+
 process.on('unhandledRejection', (error) => {
   logger.error('Unhandled Rejection:', error);
+  captureException(error, { type: 'unhandledRejection' });
 });
 
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error);
+  captureException(error, { type: 'uncaughtException' });
   process.exit(1);
 });
 

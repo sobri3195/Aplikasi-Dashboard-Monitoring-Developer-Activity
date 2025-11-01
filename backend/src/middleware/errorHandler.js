@@ -1,4 +1,5 @@
 const logger = require('../utils/logger');
+const { captureException } = require('../config/sentry');
 
 class AppError extends Error {
   constructor(message, statusCode = 500, isOperational = true) {
@@ -22,6 +23,15 @@ const errorHandler = (err, req, res, next) => {
     method: req.method,
     ip: req.ip
   });
+
+  if (!err.isOperational || error.statusCode >= 500) {
+    captureException(err, {
+      url: req.originalUrl,
+      method: req.method,
+      ip: req.ip,
+      user: req.user?.email,
+    });
+  }
 
   if (err.name === 'ValidationError') {
     const message = Object.values(err.errors).map(val => val.message);
