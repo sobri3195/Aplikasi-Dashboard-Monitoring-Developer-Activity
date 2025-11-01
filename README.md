@@ -13,7 +13,15 @@ A comprehensive system for monitoring developer activities, managing authorized 
 - 🌐 GitLab webhook integration
 - 💾 **Offline Mode with LocalStorage** - Fully functional without backend
 - 🛡️ **NEW! Access Detection & Protection** - Real-time monitoring and auto-encryption for unauthorized access
+- 🐛 **NEW! Sentry Integration** - Error tracking and performance monitoring
 
+> 📖 **NEW! Sentry Error Tracking:**
+> - [SENTRY_SETUP_QUICK_START.md](SENTRY_SETUP_QUICK_START.md) - **NEW!** Quick 5-minute Sentry setup
+> - [SENTRY_INTEGRATION.md](SENTRY_INTEGRATION.md) - Complete Sentry integration guide
+> - Automatic error tracking for backend and frontend
+> - Performance monitoring and profiling
+> - Session replay for debugging
+>
 > 📖 **NEW! Offline Mode Documentation:**
 > - [LOCALSTORAGE_OFFLINE_MODE.md](LOCALSTORAGE_OFFLINE_MODE.md) - Complete offline mode guide with repository input management
 
@@ -90,7 +98,7 @@ Real-time monitoring dashboard untuk pantau aktivitas developer:
 - **Backend API**: Node.js 18+, Express, Socket.IO, Prisma ORM
 - **Database**: PostgreSQL 14+ (Neon Serverless PostgreSQL for production)
 - **Dashboard UI**: React.js 18+, Tailwind CSS, Socket.IO Client
-- **Integrations**: GitLab Webhook API, Slack Incoming Webhook
+- **Integrations**: GitLab Webhook API, Slack Incoming Webhook, Sentry Error Tracking
 - **Deployment**: Netlify (Serverless Functions)
 
 ## 🌐 Netlify + Neon Database Setup
@@ -286,7 +294,26 @@ REACT_APP_API_URL=http://localhost:5000
    TELEGRAM_ENABLED=true
    ```
 
-> 📖 **For detailed setup instructions, see [QUICK_SETUP_MONITORING.md](QUICK_SETUP_MONITORING.md)**
+### Sentry Error Tracking Setup
+
+1. Create account at https://sentry.io
+2. Create project for Node.js (backend) and React (frontend)
+3. Copy DSN URLs from both projects
+4. Add configuration to your `.env` file:
+   ```env
+   # Backend
+   SENTRY_DSN=https://your-backend-dsn@o0.ingest.sentry.io/0000000
+   SENTRY_ENABLED=true
+   
+   # Frontend
+   REACT_APP_SENTRY_DSN=https://your-frontend-dsn@o0.ingest.sentry.io/0000000
+   REACT_APP_SENTRY_ENABLED=true
+   ```
+
+> 📖 **For detailed setup instructions:**
+> - [SENTRY_SETUP_QUICK_START.md](SENTRY_SETUP_QUICK_START.md) - Quick Sentry setup (5 minutes)
+> - [SENTRY_INTEGRATION.md](SENTRY_INTEGRATION.md) - Complete integration guide
+> - [QUICK_SETUP_MONITORING.md](QUICK_SETUP_MONITORING.md) - Monitoring setup
 
 ## Usage
 

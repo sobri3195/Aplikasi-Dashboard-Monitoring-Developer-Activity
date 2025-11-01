@@ -97,4 +97,11 @@ router.use('/ai-anomaly-detection', aiAnomalyDetectionRoutes);
 router.use('/compliance-audit', complianceAuditRoutes);
 router.use('/token-vault', tokenVaultRoutes);
 
+// Test endpoint for Sentry error tracking (development/testing only)
+if (process.env.NODE_ENV !== 'production') {
+  router.get('/test-sentry', (req, res) => {
+    throw new Error('Test error for Sentry integration! This is expected.');
+  });
+}
+
 module.exports = router;
